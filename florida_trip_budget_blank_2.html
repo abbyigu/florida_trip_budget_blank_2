@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌴 Trip Budget Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ocean: #0a4d6e;
+    --sky: #1a7a9a;
+    --wave: #2eb8d4;
+    --coral: #e85d4a;
+    --lime: #52b788;
+    --cream: #fdf8f0;
+    --dark: #1a2332;
+    --muted: #6b7a8d;
+    --border: rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  .hero {
+    background: linear-gradient(160deg, var(--ocean) 0%, var(--sky) 50%, #1da5c4 100%);
+    padding: 60px 40px 120px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0; right: 0;
+    height: 80px;
+    background: var(--cream);
+    clip-path: ellipse(55% 100% at 50% 100%);
+  }
+  .wave-bg {
+    position: absolute; inset: 0; opacity: 0.07;
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(255,255,255,0.5) 20px, rgba(255,255,255,0.5) 22px);
+  }
+  .floating-emojis { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .float-item { position: absolute; font-size: 2rem; animation: floatUp 6s ease-in-out infinite; opacity: 0.2; }
+  .float-item:nth-child(1) { left: 5%;  top: 20%; animation-delay: 0s;   font-size: 1.5rem; }
+  .float-item:nth-child(2) { left: 88%; top: 15%; animation-delay: 1s;   font-size: 2.5rem; }
+  .float-item:nth-child(3) { left: 15%; top: 60%; animation-delay: 2s;   font-size: 1.8rem; }
+  .float-item:nth-child(4) { left: 75%; top: 55%; animation-delay: 0.5s; font-size: 1.4rem; }
+  .float-item:nth-child(5) { left: 50%; top: 10%; animation-delay: 3s;   font-size: 2rem;   }
+  .float-item:nth-child(6) { left: 92%; top: 70%; animation-delay: 1.5s; font-size: 1.6rem; }
+  @keyframes floatUp {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50%       { transform: translateY(-15px) rotate(5deg); }
+  }
+
+  .hero-content { position: relative; z-index: 2; text-align: center; max-width: 700px; margin: 0 auto; }
+
+  .trip-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: #fff; font-size: 0.8rem; font-weight: 600;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 6px 18px; border-radius: 100px;
+    margin-bottom: 20px; backdrop-filter: blur(10px);
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 900; color: #fff; line-height: 1.1; margin-bottom: 12px;
+  }
+  .hero h1 span { color: #ffd166; }
+
+  .hero-edit { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+  .hero-field {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 100px; color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    padding: 7px 16px; outline: none; width: 180px;
+    text-align: center; backdrop-filter: blur(8px);
+    transition: background 0.2s, border 0.2s;
+  }
+  .hero-field::placeholder { color: rgba(255,255,255,0.4); }
+  .hero-field:focus { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.5); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Total card */
+  .total-card {
+    background: var(--dark); border-radius: 24px; padding: 36px 40px;
+    margin-bottom: 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 24px;
+    position: relative; overflow: hidden;
+    animation: slideUp 0.5s ease both;
+  }
+  .total-card::after {
+    content: '🌴'; position: absolute; right: 30px; bottom: -10px;
+    font-size: 6rem; opacity: 0.08; pointer-events: none;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .total-label { color: rgba(255,255,255,0.45); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .total-amount { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 700; color: #ffd166; line-height: 1; }
+  .total-note { color: rgba(255,255,255,0.35); font-size: 0.78rem; margin-top: 6px; }
+
+  .total-meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .meta-field {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 100px; color: rgba(255,255,255,0.75);
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    padding: 5px 14px; outline: none; text-align: center; width: 200px;
+    transition: background 0.2s;
+  }
+  .meta-field::placeholder { color: rgba(255,255,255,0.3); }
+  .meta-field:focus { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); }
+
+  /* Sections */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 36px; margin-bottom: 12px;
+  }
+  .section-label {
+    font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; width: 60px; height: 1px;
+    background: linear-gradient(to right, #ddd, transparent);
+  }
+  .add-row-btn {
+    background: none; border: 1.5px dashed #ccc;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem; font-weight: 600;
+    padding: 5px 14px; border-radius: 100px;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+  }
+  .add-row-btn:hover { border-color: var(--sky); color: var(--sky); background: rgba(26,122,154,0.05); }
+
+  /* Rows */
+  .budget-grid { display: flex; flex-direction: column; gap: 10px; }
+
+  .budget-row {
+    background: #fff; border-radius: 16px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s, transform 0.2s;
+    animation: slideUp 0.4s ease both;
+    position: relative;
+  }
+  .budget-row:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-1px); }
+  .budget-row:hover .delete-btn { opacity: 1; }
+
+  .row-icon-picker {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0; cursor: pointer;
+    background: #f4f6f8; border: 1.5px dashed #ddd;
+    transition: border-color 0.2s; position: relative;
+  }
+  .row-icon-picker:hover { border-color: var(--sky); }
+  .emoji-input {
+    position: absolute; inset: 0; opacity: 0;
+    width: 100%; height: 100%; cursor: pointer;
+    font-size: 1.4rem; text-align: center;
+    background: none; border: none; outline: none;
+  }
+
+  .row-info { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+
+  .row-name-input, .row-detail-input {
+    background: none; border: none; outline: none;
+    font-family: 'DM Sans', sans-serif; color: var(--dark);
+    width: 100%; transition: background 0.15s; border-radius: 6px; padding: 2px 6px;
+  }
+  .row-name-input { font-weight: 600; font-size: 0.95rem; }
+  .row-detail-input { font-size: 0.78rem; color: var(--muted); font-weight: 400; }
+  .row-name-input:focus, .row-detail-input:focus { background: #f0f6fa; color: var(--dark); }
+  .row-name-input::placeholder { color: #bbb; font-weight: 400; }
+  .row-detail-input::placeholder { color: #ccc; }
+
+  .row-link-wrap { display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+  .row-link-input {
+    background: none; border: none; outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem; color: var(--sky);
+    width: 100%; border-radius: 6px; padding: 2px 6px;
+    border-bottom: 1.5px dashed transparent; transition: background 0.15s;
+  }
+  .row-link-input:focus { background: #f0f6fa; border-bottom-color: var(--wave); }
+  .row-link-input::placeholder { color: #ccc; }
+  .link-icon { font-size: 0.75rem; flex-shrink: 0; opacity: 0.35; transition: opacity 0.2s; }
+  .row-link-wrap:focus-within .link-icon,
+  .row-link-wrap:hover .link-icon { opacity: 1; }
+  .link-go-btn {
+    flex-shrink: 0; background: var(--sky); color: #fff;
+    border: none; border-radius: 6px; padding: 2px 9px;
+    font-size: 0.68rem; font-weight: 600; cursor: pointer;
+    text-decoration: none; display: none;
+    font-family: 'DM Sans', sans-serif; transition: background 0.15s; white-space: nowrap;
+  }
+  .link-go-btn:hover { background: var(--ocean); }
+  .link-go-btn.visible { display: inline-block; }
+
+  /* Single amount */
+  .row-amount-wrap {
+    text-align: right; flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  }
+  .currency-tag {
+    font-size: 0.68rem; font-weight: 600; color: var(--muted);
+    background: #f0f0f0; padding: 2px 7px; border-radius: 4px;
+  }
+  .amount-input {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--dark); text-align: right;
+    background: none; border: none; outline: none;
+    border-bottom: 1.5px dashed #ddd;
+    width: 120px; padding-bottom: 2px;
+    transition: border-color 0.2s;
+  }
+  .amount-input:focus { border-color: var(--sky); }
+  .amount-input::placeholder { color: #ccc; font-weight: 400; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; }
+
+  .row-actions {
+    position: absolute; top: 10px; right: 10px;
+    display: flex; gap: 4px; opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .budget-row:hover .row-actions { opacity: 1; }
+
+  .delete-btn, .hide-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 0.8rem; color: #ccc;
+    transition: color 0.2s, background 0.2s;
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .delete-btn:hover { color: var(--coral); background: #fff0ee; }
+  .hide-btn:hover { color: var(--sky); background: #eaf6fb; }
+
+  .budget-row.hidden-row .row-info,
+  .budget-row.hidden-row .row-icon-picker,
+  .budget-row.hidden-row .row-amount-wrap { opacity: 0.3; }
+  .budget-row.hidden-row { background: #f9f9f9; }
+  .hide-btn.active { color: var(--sky); opacity: 1; }
+
+  /* Summary */
+  .summary-section { margin-top: 48px; }
+  .summary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; font-weight: 700; color: var(--dark); margin-bottom: 16px;
+  }
+  .summary-wrap {
+    background: #fff; border-radius: 20px;
+    border: 1px solid var(--border); overflow: hidden; padding: 8px 0;
+  }
+  .summary-table { width: 100%; border-collapse: collapse; }
+  .summary-table tr { border-bottom: 1px solid #f0f0f0; }
+  .summary-table tr:last-child { border-bottom: none; }
+  .summary-table td { padding: 11px 18px; font-size: 0.88rem; vertical-align: middle; }
+  .s-name { font-weight: 500; color: var(--dark); }
+  .s-amount { font-weight: 700; color: var(--sky); text-align: right; font-family: 'Playfair Display', serif; }
+  .total-row td { font-weight: 700; background: #f8fafc; font-size: 0.95rem; border-top: 2px solid var(--sky); }
+  .total-row .s-amount { font-size: 1.15rem; color: var(--ocean); }
+
+  /* Per person */
+  .pp-wrap { display: flex; gap: 14px; flex-wrap: wrap; }
+  .pp-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; flex: 1; min-width: 160px;
+  }
+  .pp-card.highlight {
+    background: linear-gradient(135deg, var(--ocean), var(--sky));
+    border-color: transparent;
+  }
+  .pp-card-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+  .pp-card.highlight .pp-card-label { color: rgba(255,255,255,0.55); }
+  .pp-card-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-weight: 700; color: var(--dark);
+  }
+  .pp-card.highlight .pp-card-amount { color: #ffd166; }
+  .pp-card-note { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+  .pp-card.highlight .pp-card-note { color: rgba(255,255,255,0.45); }
+
+  /* Notes */
+  .notes-area {
+    width: 100%; min-height: 100px;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px 18px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    color: var(--dark); resize: vertical; outline: none;
+    margin-top: 14px; line-height: 1.6; transition: border-color 0.2s;
+  }
+  .notes-area::placeholder { color: #bbb; }
+  .notes-area:focus { border-color: var(--sky); }
+
+  /* Buttons */
+  .actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 24px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; border: none; letter-spacing: 0.03em;
+  }
+  .btn-primary { background: var(--ocean); color: #fff; }
+  .btn-primary:hover { background: var(--sky); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,122,154,0.3); }
+  .btn-secondary { background: #fff; color: var(--dark); border: 1.5px solid #ddd; }
+  .btn-secondary:hover { border-color: var(--sky); color: var(--sky); }
+
+  .footer { text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px solid #eee; color: var(--muted); font-size: 0.82rem; }
+  .footer .emoji-row { font-size: 1.5rem; margin-bottom: 8px; letter-spacing: 0.3em; }
+
+  @media (max-width: 600px) {
+    .hero { padding: 40px 20px 100px; }
+    .total-card { padding: 24px; }
+    .total-meta { align-items: flex-start; }
+    .meta-field { width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wave-bg"></div>
+  <div class="floating-emojis">
+    <span class="float-item">🌴</span>
+    <span class="float-item">✈️</span>
+    <span class="float-item">🎢</span>
+    <span class="float-item">🏖️</span>
+    <span class="float-item">🌊</span>
+    <span class="float-item">🎬</span>
+  </div>
+  <div class="hero-content">
+    <div class="trip-badge">Trip Budget Planner</div>
+    <h1>Your Trip<br><span>Budget</span></h1>
+    <div class="hero-edit">
+      <input class="hero-field" id="tripName"      type="text" placeholder="Trip name (e.g. Florida 2025)" />
+      <input class="hero-field" id="tripDates"     type="text" placeholder="Dates (e.g. May 23 – June 5)" />
+      <input class="hero-field" id="tripTravelers" type="text" placeholder="Who's going?" />
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="total-card">
+    <div>
+      <div class="total-label">Total Cost</div>
+      <div class="total-amount" id="grandTotal">$0</div>
+      <div class="total-note">CAD · updates as you fill in amounts</div>
+    </div>
+    <div class="total-meta">
+      <input class="meta-field" type="text" placeholder="✈️ e.g. Direct flight YQB→MCO" />
+      <input class="meta-field" type="text" placeholder="🏨 e.g. 3 nights I-Drive" />
+      <input class="meta-field" type="text" placeholder="🎉 e.g. 9 free nights w/ family" />
+    </div>
+  </div>
+
+  <div id="sections-container"></div>
+
+  <div style="margin-top:24px;text-align:center;">
+    <button class="add-row-btn" style="font-size:0.85rem;padding:9px 22px;" onclick="addSection()">+ Add Category</button>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-section">
+    <div class="summary-title">📊 Summary</div>
+    <div class="summary-wrap">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <td class="s-name" style="color:var(--muted);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Category</td>
+            <td class="s-amount" style="color:var(--muted);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;font-family:'DM Sans',sans-serif;">Amount (CAD)</td>
+          </tr>
+        </thead>
+        <tbody id="summaryBody">
+          <tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td class="s-name">TOTAL</td>
+            <td class="s-amount" id="summaryTotal">$0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Per person -->
+  <div class="section-header" style="margin-top:36px;">
+    <div class="section-label">👤 Per Person</div>
+  </div>
+  <div class="pp-wrap">
+    <div class="pp-card">
+      <div class="pp-card-label">Number of people</div>
+      <input type="number" id="numPeople" min="1" value="2" oninput="recalculate()"
+        style="width:60px;border:1px solid #eee;border-radius:8px;padding:6px 10px;font-size:1rem;outline:none;font-family:'DM Sans',sans-serif;font-weight:600;color:var(--dark);margin-top:4px;" />
+      <div class="pp-card-note" style="margin-top:6px;">people splitting the cost</div>
+    </div>
+    <div class="pp-card highlight">
+      <div class="pp-card-label">Cost per person</div>
+      <div class="pp-card-amount" id="ppAmount">$0</div>
+      <div class="pp-card-note">CAD</div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="section-header" style="margin-top:36px;">
+    <div class="section-label">📝 Notes & Reminders</div>
+  </div>
+  <textarea class="notes-area" placeholder="e.g. Book Air Transat flights ASAP · Use Undercover Tourist for park tickets · Return car at DAB on May 28 · Family drives to MCO on June 5..."></textarea>
+
+  <div class="actions">
+    <button class="btn btn-primary"   onclick="window.print()">🖨️ Print / Save as PDF</button>
+    <button class="btn btn-secondary" onclick="clearAll()">🗑️ Clear All</button>
+  </div>
+
+  <div class="footer">
+    <div class="emoji-row">🌴 ✈️ 🎢 🌊 🎬 🏖️</div>
+    <p>Trip Budget Planner · Fill in your own numbers!</p>
+  </div>
+</div>
+
+<script>
+  let sections = [], sectionCounter = 0, rowCounter = 0;
+
+  function addSection(name = '') {
+    const id = sectionCounter++;
+    sections.push({ id, name, rows: [] });
+    addRow(id);
+    render();
+  }
+
+  function removeSection(id) {
+    sections = sections.filter(s => s.id !== id);
+    render();
+  }
+
+  function addRow(sectionId) {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    section.rows.push({ id: rowCounter++, emoji: '✏️', name: '', detail: '', link: '', amount: '', hidden: false });
+    render();
+  }
+
+  function toggleHide(sectionId, rowId) {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    const row = section.rows.find(r => r.id === rowId);
+    if (!row) return;
+    row.hidden = !row.hidden;
+    render();
+  }
+
+  function removeRow(sectionId, rowId) {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return;
+    section.rows = section.rows.filter(r => r.id !== rowId);
+    render();
+  }
+
+  function render() {
+    const container = document.getElementById('sections-container');
+    container.innerHTML = '';
+    sections.forEach(section => {
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <div class="section-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);">Category</span>
+            <input class="section-name-input" type="text"
+              placeholder="e.g. Flights, Hotels, Parks..."
+              value="${escHtml(section.name)}" data-sid="${section.id}"
+              style="border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:var(--dark);letter-spacing:0.05em;width:220px;" />
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="add-row-btn" data-sid="${section.id}">+ Add Item</button>
+            <button class="delete-btn" style="opacity:1;position:static;" data-sid-del="${section.id}">✕ Remove</button>
+          </div>
+        </div>
+        <div class="budget-grid">${section.rows.map(row => renderRow(section.id, row)).join('')}</div>
+      `;
+      container.appendChild(div);
+    });
+    bindEvents();
+    recalculate();
+  }
+
+  function renderRow(sectionId, row) {
+    return `
+      <div class="budget-row ${row.hidden ? 'hidden-row' : ''}" data-row-id="${row.id}" data-sid="${sectionId}">
+        <div class="row-icon-picker" title="Click to change emoji">
+          <span class="emoji-display">${row.emoji}</span>
+          <input class="emoji-input" type="text" maxlength="2" value="${row.emoji}"
+            data-emoji-row="${row.id}" data-sid="${sectionId}" />
+        </div>
+        <div class="row-info">
+          <input class="row-name-input" type="text"
+            placeholder="Item name (e.g. YQB → MCO flights)"
+            value="${escHtml(row.name)}" data-field="name" data-row="${row.id}" data-sid="${sectionId}" />
+          <input class="row-detail-input" type="text"
+            placeholder="Details (e.g. Air Transat, direct, book ASAP)"
+            value="${escHtml(row.detail)}" data-field="detail" data-row="${row.id}" data-sid="${sectionId}" />
+          <div class="row-link-wrap">
+            <span class="link-icon">🔗</span>
+            <input class="row-link-input" type="url" placeholder="Paste a link (optional)"
+              value="${escHtml(row.link)}" data-field="link" data-row="${row.id}" data-sid="${sectionId}" />
+            <a class="link-go-btn ${row.link ? 'visible' : ''}" href="${escHtml(row.link)}"
+              target="_blank" rel="noopener" data-link-btn="${row.id}">Open ↗</a>
+          </div>
+        </div>
+        <div class="row-amount-wrap">
+          <span class="currency-tag">$ CAD</span>
+          <input class="amount-input" type="number" placeholder="0.00"
+            value="${row.amount}" data-field="amount" data-row="${row.id}" data-sid="${sectionId}" />
+        </div>
+        <div class="row-actions">
+          <button class="hide-btn ${row.hidden ? 'active' : ''}" title="${row.hidden ? 'Show item' : 'Hide item'}" data-row-hide="${row.id}" data-sid="${sectionId}">${row.hidden ? '👁️' : '🙈'}</button>
+          <button class="delete-btn" title="Remove item" data-row-del="${row.id}" data-sid="${sectionId}">✕</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindEvents() {
+    document.querySelectorAll('.section-name-input').forEach(el => {
+      el.addEventListener('input', e => {
+        const s = sections.find(s => s.id == e.target.dataset.sid);
+        if (s) s.name = e.target.value;
+        recalculate();
+      });
+    });
+    document.querySelectorAll('[data-sid].add-row-btn').forEach(btn => {
+      btn.addEventListener('click', () => addRow(parseInt(btn.dataset.sid)));
+    });
+    document.querySelectorAll('[data-sid-del]').forEach(btn => {
+      btn.addEventListener('click', () => removeSection(parseInt(btn.dataset.sidDel)));
+    });
+    document.querySelectorAll('[data-row-hide]').forEach(btn => {
+      btn.addEventListener('click', () => toggleHide(parseInt(btn.dataset.sid), parseInt(btn.dataset.rowHide)));
+    });
+    document.querySelectorAll('[data-row-del]').forEach(btn => {
+      btn.addEventListener('click', () => removeRow(parseInt(btn.dataset.sid), parseInt(btn.dataset.rowDel)));
+    });
+    document.querySelectorAll('[data-field][data-row]').forEach(el => {
+      el.addEventListener('input', e => {
+        const section = sections.find(s => s.id == e.target.dataset.sid);
+        if (!section) return;
+        const row = section.rows.find(r => r.id == e.target.dataset.row);
+        if (!row) return;
+        row[e.target.dataset.field] = e.target.value;
+        if (e.target.dataset.field === 'link') {
+          const btn = document.querySelector(`[data-link-btn="${e.target.dataset.row}"]`);
+          if (btn) { const v = e.target.value.trim(); btn.href = v; btn.classList.toggle('visible', v.length > 0); }
+        }
+        recalculate();
+      });
+    });
+    document.querySelectorAll('.emoji-input').forEach(el => {
+      el.addEventListener('input', e => {
+        const val = e.target.value.trim() || '✏️';
+        const section = sections.find(s => s.id == e.target.dataset.sid);
+        if (!section) return;
+        const row = section.rows.find(r => r.id == e.target.dataset.emojiRow);
+        if (!row) return;
+        row.emoji = val;
+        const d = e.target.parentElement.querySelector('.emoji-display');
+        if (d) d.textContent = val;
+      });
+    });
+  }
+
+  function recalculate() {
+    let total = 0;
+    const summaryRows = [];
+    sections.forEach(section => {
+      let sTotal = 0;
+      section.rows.forEach(row => { if (!row.hidden) sTotal += parseFloat(row.amount) || 0; });
+      total += sTotal;
+      if (section.name || sTotal) summaryRows.push({ name: section.name || 'Unnamed', amount: sTotal });
+    });
+
+    document.getElementById('grandTotal').textContent = '$' + fmt(total);
+    document.getElementById('summaryTotal').textContent = '$' + fmt(total);
+
+    const people = parseInt(document.getElementById('numPeople').value) || 1;
+    document.getElementById('ppAmount').textContent = '$' + fmt(total / people);
+
+    const tbody = document.getElementById('summaryBody');
+    tbody.innerHTML = summaryRows.length === 0
+      ? '<tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>'
+      : summaryRows.map(r => `<tr><td class="s-name">${escHtml(r.name)}</td><td class="s-amount">$${fmt(r.amount)}</td></tr>`).join('');
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString(); }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function clearAll() {
+    if (!confirm('Clear everything and start fresh?')) return;
+    sections = []; sectionCounter = 0; rowCounter = 0;
+    ['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).value = '');
+    document.querySelectorAll('.meta-field').forEach(f => f.value = '');
+    document.querySelector('.notes-area').value = '';
+    render();
+  }
+
+  addSection('Flights');
+  addSection('Ground Transport');
+  addSection('Accommodation');
+  addSection('Theme Parks');
+  addSection('Food & Extras');
+</script>
+</body>
+</html>
