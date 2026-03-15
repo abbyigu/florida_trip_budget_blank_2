@@ -436,34 +436,82 @@
 </div>
 
 <script>
-  let sections = [], sectionCounter = 0, rowCounter = 0;
+  // --- State ---
+  let sections = [];
+  let sectionById = new Map();   // O(1) section lookup
+  let sectionCounter = 0, rowCounter = 0;
 
+  // Cached DOM refs (set after DOM ready)
+  let elGrandTotal, elSummaryTotal, elNumPeople, elPpAmount, elSummaryBody, elSectionsContainer;
+
+  // --- Debounced recalculate ---
+  let recalcTimer = null;
+  function scheduleRecalc() {
+    clearTimeout(recalcTimer);
+    recalcTimer = setTimeout(recalculate, 30);
+  }
+
+  // --- Data helpers ---
+  function newRow() {
+    return { id: rowCounter++, emoji: '✏️', name: '', detail: '', link: '', amount: '', hidden: false };
+  }
+
+  // --- Section operations (incremental DOM updates) ---
   function addSection(name = '') {
-    const id = sectionCounter++;
-    sections.push({ id, name, rows: [] });
-    addRow(id);
-    render();
+    const section = { id: sectionCounter++, name, rows: [], rowById: new Map() };
+    sections.push(section);
+    sectionById.set(section.id, section);
+    const row = newRow();
+    section.rows.push(row);
+    section.rowById.set(row.id, row);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'section-wrapper';
+    wrapper.dataset.sectionId = section.id;
+    wrapper.innerHTML = sectionHTML(section);
+    elSectionsContainer.appendChild(wrapper);
+    recalculate();
   }
 
   function removeSection(id) {
-    sections = sections.filter(s => s.id !== id);
-    render();
+    const idx = sections.findIndex(s => s.id === id);
+    if (idx === -1) return;
+    sections.splice(idx, 1);
+    sectionById.delete(id);
+    elSectionsContainer.querySelector(`.section-wrapper[data-section-id="${id}"]`)?.remove();
+    recalculate();
   }
 
   function addRow(sectionId) {
-    const section = sections.find(s => s.id === sectionId);
+    const section = sectionById.get(sectionId);
     if (!section) return;
-    section.rows.push({ id: rowCounter++, emoji: '✏️', name: '', detail: '', link: '', amount: '', hidden: false });
-    render();
+    const row = newRow();
+    section.rows.push(row);
+    section.rowById.set(row.id, row);
+
+    const grid = elSectionsContainer.querySelector(`.budget-grid[data-section-id="${sectionId}"]`);
+    if (grid) grid.insertAdjacentHTML('beforeend', rowHTML(sectionId, row));
+    recalculate();
+  }
+
+  function removeRow(sectionId, rowId) {
+    const section = sectionById.get(sectionId);
+    if (!section) return;
+    const idx = section.rows.findIndex(r => r.id === rowId);
+    if (idx === -1) return;
+    section.rows.splice(idx, 1);
+    section.rowById.delete(rowId);
+    elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`)?.remove();
+    recalculate();
   }
 
   function toggleHide(sectionId, rowId) {
-    const section = sections.find(s => s.id === sectionId);
+    const section = sectionById.get(sectionId);
     if (!section) return;
-    const row = section.rows.find(r => r.id === rowId);
+    const row = section.rowById.get(rowId);
     if (!row) return;
     row.hidden = !row.hidden;
-    const rowEl = document.querySelector(`.budget-row[data-row-id="${rowId}"]`);
+    const rowEl = elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`);
     if (rowEl) {
       rowEl.classList.toggle('hidden-row', row.hidden);
       const hideBtn = rowEl.querySelector(`[data-row-hide="${rowId}"]`);
@@ -473,43 +521,30 @@
         hideBtn.textContent = row.hidden ? '👁️' : '🙈';
       }
     }
-    recalculate();
+    scheduleRecalc();
   }
 
-  function removeRow(sectionId, rowId) {
-    const section = sections.find(s => s.id === sectionId);
-    if (!section) return;
-    section.rows = section.rows.filter(r => r.id !== rowId);
-    render();
-  }
-
-  function render() {
-    const container = document.getElementById('sections-container');
-    container.innerHTML = '';
-    sections.forEach(section => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <div class="section-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);">Category</span>
-            <input class="section-name-input" type="text"
-              placeholder="e.g. Flights, Hotels, Parks..."
-              value="${escHtml(section.name)}" data-sid="${section.id}"
-              style="border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:var(--dark);letter-spacing:0.05em;width:220px;" />
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button class="add-row-btn" data-sid="${section.id}">+ Add Item</button>
-            <button class="delete-btn" style="opacity:1;position:static;" data-sid-del="${section.id}">✕ Remove</button>
-          </div>
+  // --- HTML builders ---
+  function sectionHTML(section) {
+    return `
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);">Category</span>
+          <input class="section-name-input" type="text"
+            placeholder="e.g. Flights, Hotels, Parks..."
+            value="${escHtml(section.name)}" data-sid="${section.id}"
+            style="border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:var(--dark);letter-spacing:0.05em;width:220px;" />
         </div>
-        <div class="budget-grid">${section.rows.map(row => renderRow(section.id, row)).join('')}</div>
-      `;
-      container.appendChild(div);
-    });
-    recalculate();
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="add-row-btn" data-sid="${section.id}">+ Add Item</button>
+          <button class="delete-btn" style="opacity:1;position:static;" data-sid-del="${section.id}">✕ Remove</button>
+        </div>
+      </div>
+      <div class="budget-grid" data-section-id="${section.id}">${section.rows.map(r => rowHTML(section.id, r)).join('')}</div>
+    `;
   }
 
-  function renderRow(sectionId, row) {
+  function rowHTML(sectionId, row) {
     return `
       <div class="budget-row ${row.hidden ? 'hidden-row' : ''}" data-row-id="${row.id}" data-sid="${sectionId}">
         <div class="row-icon-picker" title="Click to change emoji">
@@ -545,45 +580,60 @@
     `;
   }
 
-  function initEventDelegation() {
-    const container = document.getElementById('sections-container');
+  // --- Full render (initial load + clearAll only) ---
+  function renderAll() {
+    elSectionsContainer.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    sections.forEach(section => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'section-wrapper';
+      wrapper.dataset.sectionId = section.id;
+      wrapper.innerHTML = sectionHTML(section);
+      frag.appendChild(wrapper);
+    });
+    elSectionsContainer.appendChild(frag);
+    recalculate();
+  }
 
-    container.addEventListener('click', e => {
+  // --- Event delegation ---
+  function initEventDelegation() {
+    elSectionsContainer.addEventListener('click', e => {
       const btn = e.target.closest('button');
       if (!btn) return;
+      const sid = btn.dataset.sid !== undefined ? parseInt(btn.dataset.sid) : NaN;
       if (btn.dataset.sidDel !== undefined) {
         removeSection(parseInt(btn.dataset.sidDel));
       } else if (btn.dataset.rowHide !== undefined) {
-        toggleHide(parseInt(btn.dataset.sid), parseInt(btn.dataset.rowHide));
+        toggleHide(sid, parseInt(btn.dataset.rowHide));
       } else if (btn.dataset.rowDel !== undefined) {
-        removeRow(parseInt(btn.dataset.sid), parseInt(btn.dataset.rowDel));
-      } else if (btn.classList.contains('add-row-btn') && btn.dataset.sid !== undefined) {
-        addRow(parseInt(btn.dataset.sid));
+        removeRow(sid, parseInt(btn.dataset.rowDel));
+      } else if (btn.classList.contains('add-row-btn') && !isNaN(sid)) {
+        addRow(sid);
       }
     });
 
-    container.addEventListener('input', e => {
+    elSectionsContainer.addEventListener('input', e => {
       const el = e.target;
       if (el.classList.contains('section-name-input')) {
-        const s = sections.find(s => s.id == el.dataset.sid);
+        const s = sectionById.get(parseInt(el.dataset.sid));
         if (s) s.name = el.value;
-        recalculate();
+        scheduleRecalc();
       } else if (el.dataset.field !== undefined && el.dataset.row !== undefined) {
-        const section = sections.find(s => s.id == el.dataset.sid);
+        const section = sectionById.get(parseInt(el.dataset.sid));
         if (!section) return;
-        const row = section.rows.find(r => r.id == el.dataset.row);
+        const row = section.rowById.get(parseInt(el.dataset.row));
         if (!row) return;
         row[el.dataset.field] = el.value;
         if (el.dataset.field === 'link') {
-          const linkBtn = document.querySelector(`[data-link-btn="${el.dataset.row}"]`);
+          const linkBtn = elSectionsContainer.querySelector(`[data-link-btn="${el.dataset.row}"]`);
           if (linkBtn) { const v = el.value.trim(); linkBtn.href = v; linkBtn.classList.toggle('visible', v.length > 0); }
         }
-        recalculate();
+        scheduleRecalc();
       } else if (el.classList.contains('emoji-input')) {
         const val = el.value.trim() || '✏️';
-        const section = sections.find(s => s.id == el.dataset.sid);
+        const section = sectionById.get(parseInt(el.dataset.sid));
         if (!section) return;
-        const row = section.rows.find(r => r.id == el.dataset.emojiRow);
+        const row = section.rowById.get(parseInt(el.dataset.emojiRow));
         if (!row) return;
         row.emoji = val;
         const d = el.parentElement.querySelector('.emoji-display');
@@ -602,14 +652,14 @@
       if (section.name || sTotal) summaryRows.push({ name: section.name || 'Unnamed', amount: sTotal });
     });
 
-    document.getElementById('grandTotal').textContent = '$' + fmt(total);
-    document.getElementById('summaryTotal').textContent = '$' + fmt(total);
+    const formatted = '$' + fmt(total);
+    elGrandTotal.textContent = formatted;
+    elSummaryTotal.textContent = formatted;
 
-    const people = parseInt(document.getElementById('numPeople').value) || 1;
-    document.getElementById('ppAmount').textContent = '$' + fmt(total / people);
+    const people = parseInt(elNumPeople.value) || 1;
+    elPpAmount.textContent = '$' + fmt(total / people);
 
-    const tbody = document.getElementById('summaryBody');
-    tbody.innerHTML = summaryRows.length === 0
+    elSummaryBody.innerHTML = summaryRows.length === 0
       ? '<tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>'
       : summaryRows.map(r => `<tr><td class="s-name">${escHtml(r.name)}</td><td class="s-amount">$${fmt(r.amount)}</td></tr>`).join('');
   }
@@ -622,50 +672,73 @@
 
   function clearAll() {
     if (!confirm('Clear everything and start fresh?')) return;
-    sections = []; sectionCounter = 0; rowCounter = 0;
+    sections = []; sectionById.clear(); sectionCounter = 0; rowCounter = 0;
     ['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).value = '');
     document.querySelectorAll('.meta-field').forEach(f => f.value = '');
     document.querySelector('.notes-area').value = '';
-    render();
+    renderAll();
   }
 
-  sections = [
-    {
-      id: sectionCounter++, name: 'Flights',
-      rows: [
-        { id: rowCounter++, emoji: '✏️', name: 'YUL to MCO - MCO to YUL', detail: '✈️ AC 1636 · May 23 15:10→18:31 non-stop (3h21m) · ✈️ AC 1641 · Jun 5 19:30→22:46 non-stop (3h16m) · Air Canada Rouge · Economy Standard · 2 Adults', link: 'https://www.aircanada.com/booking/ca/en/aco/review-trip', amount: '1566.36', hidden: false }
-      ]
-    },
-    {
-      id: sectionCounter++, name: 'Ground Transport',
-      rows: [
-        { id: rowCounter++, emoji: '✏️', name: 'Economy car', detail: '', link: 'https://www.expedia.ca/carsearch/details?selCC=%5Bmini%2Ceconomy%2Ccompact%5D&date1=23%2F05%2', amount: '269.39', hidden: false },
-        { id: rowCounter++, emoji: '✏️', name: 'Train SAINTE-FOY To MONTREAL - CENTRAL STATION', detail: 'Via Rail · May 23, 2026 SAINTE-FOY to DORVAL, Train #35 · Jun 6, 2026 DORVAL to SAINTE-FOY', link: 'https://reservia.viarail.ca/en/booking/create/trip/2?type=roundTrip&ADT=2&travels=SFOY_MTRL_2026-05-23', amount: '197.76', hidden: false }
-      ]
-    },
-    {
-      id: sectionCounter++, name: 'Accommodation',
-      rows: [
-        { id: rowCounter++, emoji: '✏️', name: 'B&B Hotel Orlando International Drive Near Universal', detail: '', link: 'https://www.expedia.ca/Hotel-Search?regionId=5194573&destination=Orlando%2C%20FL%2C%20United%20States', amount: '461.21', hidden: true },
-        { id: rowCounter++, emoji: '✏️', name: 'Cozy hotel room in Developer Inn Express Resort', detail: '', link: 'https://www.expedia.ca/Orlando-Hotels-Impeccably-Cozy-Hotel-Room-Developer-Inn-Express.h102600599.Hotel', amount: '363.68', hidden: false }
-      ]
-    },
-    {
-      id: sectionCounter++, name: 'Theme Parks',
-      rows: [
-        { id: rowCounter++, emoji: '✏️', name: 'Universal 2-Park Express Pass', detail: '1 day pass', link: 'https://www.undercovertourist.com/cart/', amount: '518.94', hidden: true },
-        { id: rowCounter++, emoji: '✏️', name: '2-Day Universal Express Pass (including Universal Epic Universe)', detail: '', link: 'https://www.undercovertourist.com/orlando/universal-orlando-resort/', amount: '579.64', hidden: false }
-      ]
-    },
-    {
-      id: sectionCounter++, name: 'Food & Extras',
-      rows: [
-        { id: rowCounter++, emoji: '✏️', name: 'Food & Activities', detail: '', link: '', amount: '770', hidden: true },
-        { id: rowCounter++, emoji: '✏️', name: 'Rainbow inner tubing', detail: '', link: 'https://visitrainbowsprings.com/tubing/', amount: '30.00', hidden: true }
-      ]
-    }
-  ];
-  render();
+  // --- Initial data ---
+  (function initData() {
+    const raw = [
+      {
+        name: 'Flights',
+        rows: [
+          { emoji: '✏️', name: 'YUL to MCO - MCO to YUL', detail: '✈️ AC 1636 · May 23 15:10→18:31 non-stop (3h21m) · ✈️ AC 1641 · Jun 5 19:30→22:46 non-stop (3h16m) · Air Canada Rouge · Economy Standard · 2 Adults', link: 'https://www.aircanada.com/booking/ca/en/aco/review-trip', amount: '1566.36', hidden: false }
+        ]
+      },
+      {
+        name: 'Ground Transport',
+        rows: [
+          { emoji: '✏️', name: 'Economy car', detail: '', link: 'https://www.expedia.ca/carsearch/details?selCC=%5Bmini%2Ceconomy%2Ccompact%5D&date1=23%2F05%2', amount: '269.39', hidden: false },
+          { emoji: '✏️', name: 'Train SAINTE-FOY To MONTREAL - CENTRAL STATION', detail: 'Via Rail · May 23, 2026 SAINTE-FOY to DORVAL, Train #35 · Dep. 8:34 · Jun 6, 2026 DORVAL to SAINTE-FOY', link: 'https://reservia.viarail.ca/en/booking/create/trip/2?type=roundTrip&ADT=2&travels=SFOY_MTRL_2026-05-23', amount: '197.76', hidden: false }
+        ]
+      },
+      {
+        name: 'Accommodation',
+        rows: [
+          { emoji: '✏️', name: 'B&B Hotel Orlando International Drive Near Universal', detail: '', link: 'https://www.expedia.ca/Hotel-Search?regionId=5194573&destination=Orlando%2C%20FL%2C%20United%20States', amount: '461.21', hidden: true },
+          { emoji: '✏️', name: 'Cozy hotel room in Developer Inn Express Resort', detail: '', link: 'https://www.expedia.ca/Orlando-Hotels-Impeccably-Cozy-Hotel-Room-Developer-Inn-Express.h102600599.Hotel', amount: '363.68', hidden: false }
+        ]
+      },
+      {
+        name: 'Theme Parks',
+        rows: [
+          { emoji: '✏️', name: 'Universal 2-Park Express Pass', detail: '1 day pass', link: 'https://www.undercovertourist.com/cart/', amount: '518.94', hidden: true },
+          { emoji: '✏️', name: '2-Day Universal Express Pass (including Universal Epic Universe)', detail: '', link: 'https://www.undercovertourist.com/orlando/universal-orlando-resort/', amount: '579.64', hidden: false }
+        ]
+      },
+      {
+        name: 'Food & Extras',
+        rows: [
+          { emoji: '✏️', name: 'Food & Activities', detail: '', link: '', amount: '770', hidden: true },
+          { emoji: '✏️', name: 'Rainbow inner tubing', detail: '', link: 'https://visitrainbowsprings.com/tubing/', amount: '30.00', hidden: true }
+        ]
+      }
+    ];
+
+    raw.forEach(s => {
+      const section = { id: sectionCounter++, name: s.name, rows: [], rowById: new Map() };
+      sections.push(section);
+      sectionById.set(section.id, section);
+      s.rows.forEach(r => {
+        const row = { id: rowCounter++, ...r };
+        section.rows.push(row);
+        section.rowById.set(row.id, row);
+      });
+    });
+  })();
+
+  // Cache DOM refs once
+  elGrandTotal        = document.getElementById('grandTotal');
+  elSummaryTotal      = document.getElementById('summaryTotal');
+  elNumPeople         = document.getElementById('numPeople');
+  elPpAmount          = document.getElementById('ppAmount');
+  elSummaryBody       = document.getElementById('summaryBody');
+  elSectionsContainer = document.getElementById('sections-container');
+
+  renderAll();
 
   document.getElementById('tripName').value = 'Fred and Ariel Adventure';
   document.getElementById('tripDates').value = 'May 23 - June 5';
