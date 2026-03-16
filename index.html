@@ -948,23 +948,15 @@
     <div id="packCatsContainer"></div>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
       <button class="btn-add" onclick="addPackCategory()">+ Add Category</button>
-      <button class="ai-fab" onclick="openAIModal()">✨ AI Suggest</button>
+      <button class="ai-fab" onclick="openAIModal()">✨ Smart Suggest</button>
     </div>
   </div>
 
-  <!-- ─────────────────── AI PACKING MODAL ─────────────────── -->
+  <!-- ─────────────────── SMART PACKING MODAL ─────────────────── -->
   <div class="ai-overlay" id="aiOverlay" style="display:none" onclick="if(event.target===this)closeAIModal()">
     <div class="ai-modal">
-      <div class="ai-modal-title">✨ AI Packing Suggestions</div>
+      <div class="ai-modal-title">✨ Smart Packing Suggest</div>
       <div class="ai-context-pill" id="aiContextPill">Loading trip info…</div>
-      <div>
-        <label style="font-size:0.75rem;font-weight:700;color:var(--muted);letter-spacing:0.08em;display:block;margin-bottom:6px;">ANTHROPIC API KEY</label>
-        <div class="ai-key-row">
-          <input class="ai-key-input" id="aiKeyInput" type="password" placeholder="sk-ant-…" autocomplete="off">
-          <button class="ai-generate-btn" id="aiGenBtn" onclick="generateAIPacking()">Generate</button>
-        </div>
-        <div style="font-size:0.7rem;color:var(--muted);margin-top:5px;">Stored locally — only sent to Anthropic's API.</div>
-      </div>
       <div class="ai-status" id="aiStatus"></div>
       <div class="ai-results" id="aiResults"></div>
       <div class="ai-footer">
@@ -1524,101 +1516,169 @@ function renderPacking() {
 }
 
 // ═══════════════════════════════════════════════════════
-//  AI PACKING SUGGESTIONS
+//  SMART PACKING SUGGESTIONS (rule-based, no API needed)
 // ═══════════════════════════════════════════════════════
 let aiSuggestedCategories = [];
 
 function openAIModal() {
   const tripName = document.getElementById('tripName').value || 'Your Trip';
   const tripDates = document.getElementById('tripDates').value || '';
-  const tripLocation = (legs[0] && legs[0].to) || 'Orlando, FL';
+  const destination = (legs[0] && legs[0].to) || 'Orlando, FL';
   const travelers = people
     .filter(p => p.status !== 'declined')
-    .map(p => (p.name || 'Traveler') + (p.role ? ` (${p.role})` : ''));
+    .map(p => p.name || 'Traveler');
   document.getElementById('aiContextPill').innerHTML =
-    `<strong>${tripName}</strong> · ${tripLocation}<br>` +
+    `<strong>${tripName}</strong> · ${destination}<br>` +
     (tripDates ? `${tripDates}<br>` : '') +
     (travelers.length ? `Travelers: ${travelers.join(', ')}` : 'No travelers added yet');
-  const saved = localStorage.getItem('aiApiKey');
-  if (saved) document.getElementById('aiKeyInput').value = saved;
   document.getElementById('aiStatus').textContent = '';
   document.getElementById('aiResults').innerHTML = '';
   document.getElementById('aiApplyBtn').disabled = true;
   aiSuggestedCategories = [];
   document.getElementById('aiOverlay').style.display = 'flex';
+  // Auto-generate immediately
+  generateSmartPacking();
 }
 
 function closeAIModal() {
   document.getElementById('aiOverlay').style.display = 'none';
 }
 
-async function generateAIPacking() {
-  const key = document.getElementById('aiKeyInput').value.trim();
-  if (!key) { document.getElementById('aiStatus').textContent = '⚠ Please enter your Anthropic API key.'; return; }
-  localStorage.setItem('aiApiKey', key);
+function generateSmartPacking() {
+  const tripDates = document.getElementById('tripDates').value || '';
+  const destination = (legs[0] && legs[0].to) || 'Orlando, FL';
+  const dest = destination.toLowerCase();
 
-  const tripName = document.getElementById('tripName').value || 'Florida Trip';
-  const tripDates = document.getElementById('tripDates').value || 'May 23 – June 5, 2026';
-  const tripLocation = (legs[0] && legs[0].to) || 'Orlando, FL';
-  const travelers = people
-    .filter(p => p.status !== 'declined')
-    .map(p => (p.name || 'Traveler') + (p.role ? ` (${p.role})` : ''));
-  const existingCats = packCats.map(c => c.name).filter(Boolean);
-
-  const btn = document.getElementById('aiGenBtn');
-  btn.disabled = true; btn.textContent = 'Generating…';
-  document.getElementById('aiStatus').textContent = '⏳ Calling AI — this may take a few seconds…';
-  document.getElementById('aiResults').innerHTML = '';
-  document.getElementById('aiApplyBtn').disabled = true;
-
-  const prompt =
-    `Generate a comprehensive packing list for this trip:\n` +
-    `Trip: ${tripName}\nDestination: ${tripLocation}\nDates: ${tripDates}\n` +
-    `Travelers: ${travelers.length ? travelers.join(', ') : 'not specified'}\n` +
-    (existingCats.length ? `Already have categories: ${existingCats.join(', ')}\n` : '') +
-    `\nReturn ONLY a JSON array (no markdown, no explanation) like:\n` +
-    `[{"emoji":"📄","category":"Documents","items":["Passport","Travel insurance"]},` +
-    `{"emoji":"👕","category":"Clothing","items":["T-shirts x7","Shorts x4"]}]\n` +
-    `Make it specific to the destination, season, and each traveler. 6-9 categories, 6-12 items each.`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('Could not parse AI response.');
-    aiSuggestedCategories = JSON.parse(jsonMatch[0]);
-    renderAIResults(aiSuggestedCategories);
-    document.getElementById('aiStatus').textContent =
-      `✅ ${aiSuggestedCategories.length} categories ready — uncheck anything you don't need.`;
-    document.getElementById('aiApplyBtn').disabled = false;
-  } catch(e) {
-    document.getElementById('aiStatus').textContent = `❌ ${e.message}`;
-  } finally {
-    btn.disabled = false; btn.textContent = 'Generate';
+  // Estimate trip duration from date string
+  let numDays = 14;
+  const dm = tripDates.match(/(\w+\s+\d{1,2})[^a-zA-Z\d]*(\w+\s+\d{1,2})/);
+  if (dm) {
+    const yearGuess = (tripDates.match(/20\d\d/) || ['2026'])[0];
+    const d1 = new Date(dm[1] + ' ' + yearGuess), d2 = new Date(dm[2] + ' ' + yearGuess);
+    if (!isNaN(d1) && !isNaN(d2)) numDays = Math.max(1, Math.round((d2 - d1) / 86400000) + 1);
   }
+
+  const datesLower = tripDates.toLowerCase();
+  const isHot      = /florida|orlando|miami|tampa|cancun|caribbean|hawaii|bahamas|mexico|cuba|los angeles|phoenix|vegas/.test(dest);
+  const isThemePark = /orlando|disney|universal/.test(dest);
+  const isRainy    = /jun|jul|aug|sep/.test(datesLower);
+  const numTravelers = Math.max(1, people.filter(p => p.status !== 'declined').length);
+
+  const cats = [];
+
+  // Documents
+  cats.push({ emoji: '📄', category: 'Documents & Essentials', items: [
+    'Passport / Photo ID',
+    'Travel insurance documents',
+    'Boarding passes (printed or in app)',
+    'Hotel & car reservation printouts',
+    'Credit cards & USD cash',
+    'Emergency contact list',
+    'Trip itinerary copy',
+  ]});
+
+  // Clothing — quantities based on duration
+  const shirts  = Math.min(numDays, 10);
+  const shorts  = Math.ceil(numDays / 2);
+  const clothing = [
+    `T-shirts × ${shirts} (lightweight)`,
+    `Shorts × ${shorts}`,
+    'Swimsuit × 2',
+    'Light hoodie / cardigan (for A/C)',
+    'Comfortable walking shoes',
+    'Flip flops / sandals',
+    `Underwear & socks × ${numDays + 1}`,
+    'Pyjamas / sleep clothes',
+  ];
+  if (isHot) clothing.push('Sun hat or cap');
+  cats.push({ emoji: '👕', category: 'Clothing', items: clothing });
+
+  // Sun & heat
+  if (isHot) cats.push({ emoji: '☀️', category: 'Sun & Heat Protection', items: [
+    'Sunscreen SPF 50+ (reef-safe)',
+    'After-sun lotion / aloe vera gel',
+    'Sunglasses (UV protection)',
+    'Wide-brim hat',
+    'Refillable water bottle',
+    'Cooling towel',
+  ]});
+
+  // Theme park
+  if (isThemePark) {
+    const park = [
+      'Comfortable backpack',
+      'Fanny pack / crossbody bag',
+      'Portable phone charger / power bank',
+      'Comfortable sneakers (worn-in)',
+      'Snacks & energy bars',
+      'Reusable water bottle',
+    ];
+    if (isRainy) park.push('Poncho / compact rain jacket', 'Waterproof phone case');
+    cats.push({ emoji: '🎢', category: 'Theme Park Essentials', items: park });
+  }
+
+  // Toiletries
+  cats.push({ emoji: '🧴', category: 'Toiletries', items: [
+    'Toothbrush & toothpaste',
+    'Shampoo & conditioner',
+    'Deodorant',
+    'Body wash / soap',
+    'Razor & shaving cream',
+    'Moisturizer / face wash',
+    'Nail clippers & tweezers',
+    'Cotton swabs',
+  ]});
+
+  // Health
+  cats.push({ emoji: '💊', category: 'Health & Medications', items: [
+    `Prescription medications × ${numDays + 2} days supply`,
+    'Pain reliever (ibuprofen / Tylenol)',
+    'Allergy medication',
+    'Antacids / digestive relief',
+    'Blister bandages & mini first aid kit',
+    'Insect repellent',
+    'Hand sanitizer',
+  ]});
+
+  // Electronics
+  cats.push({ emoji: '🔌', category: 'Electronics', items: [
+    'Phone & charging cable',
+    'Portable power bank (fully charged)',
+    'Earphones / AirPods',
+    'Camera & extra memory cards',
+    'Laptop or tablet (optional)',
+  ]});
+
+  // Carry-on
+  cats.push({ emoji: '🎒', category: 'Carry-on Bag', items: [
+    'Change of clothes',
+    'Phone charger & power bank',
+    'Snacks for the flight',
+    'Travel pillow & eye mask',
+    'Entertainment (book / downloaded shows)',
+    'Reusable shopping bag',
+  ]});
+
+  // Filter out categories already fully covered
+  const existingNames = packCats.map(c => c.name.toLowerCase().trim());
+  aiSuggestedCategories = cats.filter(c => !existingNames.includes(c.category.toLowerCase().trim()));
+
+  const skipped = cats.length - aiSuggestedCategories.length;
+  renderAIResults(aiSuggestedCategories);
+  document.getElementById('aiStatus').textContent =
+    `${aiSuggestedCategories.length} categories suggested for ${numDays}-day trip to ${destination}` +
+    (skipped ? ` · ${skipped} already in your list` : '') +
+    ` — uncheck anything you don't need.`;
+  document.getElementById('aiApplyBtn').disabled = aiSuggestedCategories.length === 0;
 }
 
 function renderAIResults(cats) {
   const container = document.getElementById('aiResults');
   container.innerHTML = '';
+  if (!cats.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:0.85rem;">All suggested categories are already in your packing list! 🎉</div>';
+    return;
+  }
   cats.forEach((cat, ci) => {
     const div = document.createElement('div');
     div.className = 'ai-res-cat';
