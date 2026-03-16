@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🌴 Trip Budget Planner</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
 <style>
   :root {
     --ocean: #0a4d6e;
@@ -46,7 +49,7 @@
     background-image: repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(255,255,255,0.5) 20px, rgba(255,255,255,0.5) 22px);
   }
   .floating-emojis { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-  .float-item { position: absolute; font-size: 2rem; animation: floatUp 6s ease-in-out infinite; opacity: 0.2; }
+  .float-item { position: absolute; font-size: 2rem; animation: floatUp 6s ease-in-out infinite; opacity: 0.2; will-change: transform; }
   .float-item:nth-child(1) { left: 5%;  top: 20%; animation-delay: 0s;   font-size: 1.5rem; }
   .float-item:nth-child(2) { left: 88%; top: 15%; animation-delay: 1s;   font-size: 2.5rem; }
   .float-item:nth-child(3) { left: 15%; top: 60%; animation-delay: 2s;   font-size: 1.8rem; }
@@ -321,6 +324,19 @@
   .footer { text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px solid #eee; color: var(--muted); font-size: 0.82rem; }
   .footer .emoji-row { font-size: 1.5rem; margin-bottom: 8px; letter-spacing: 0.3em; }
 
+  /* Save indicator */
+  #save-indicator {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--lime); color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+    padding: 8px 18px; border-radius: 100px;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none; z-index: 999;
+    box-shadow: 0 4px 12px rgba(82,183,136,0.3);
+  }
+  #save-indicator.visible { opacity: 1; transform: translateY(0); }
+
   @media (max-width: 600px) {
     .hero { padding: 40px 20px 100px; }
     .total-card { padding: 24px; }
@@ -432,72 +448,188 @@
   </div>
 </div>
 
-<script>
-  let sections = [], sectionCounter = 0, rowCounter = 0;
+<div id="save-indicator">✓ Saved</div>
 
+<script>
+  // --- State ---
+  let sections = [];
+  let sectionById = new Map();   // O(1) section lookup
+  let sectionCounter = 0, rowCounter = 0;
+
+  // Cached DOM refs (set after DOM ready)
+  let elGrandTotal, elSummaryTotal, elNumPeople, elPpAmount, elSummaryBody, elSectionsContainer;
+
+  // --- Debounced recalculate ---
+  let recalcTimer = null;
+  function scheduleRecalc() {
+    clearTimeout(recalcTimer);
+    recalcTimer = setTimeout(recalculate, 30);
+  }
+
+  // --- localStorage persistence ---
+  const STORAGE_KEY = 'florida_trip_budget_v1';
+
+  function saveToStorage() {
+    try {
+      const data = {
+        v: 1,
+        sectionCounter,
+        rowCounter,
+        sections: sections.map(s => ({
+          id: s.id, name: s.name,
+          rows: s.rows.map(r => ({
+            id: r.id, emoji: r.emoji, name: r.name,
+            detail: r.detail, link: r.link, amount: r.amount, hidden: r.hidden
+          }))
+        })),
+        tripName:      document.getElementById('tripName').value,
+        tripDates:     document.getElementById('tripDates').value,
+        tripTravelers: document.getElementById('tripTravelers').value,
+        meta:          Array.from(document.querySelectorAll('.meta-field')).map(f => f.value),
+        notes:         document.querySelector('.notes-area').value,
+        numPeople:     elNumPeople ? elNumPeople.value : '2'
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      showSaved();
+    } catch(e) {}
+  }
+
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (!data || data.v !== 1) return null;
+      sectionCounter = data.sectionCounter || 0;
+      rowCounter     = data.rowCounter || 0;
+      sections = [];
+      sectionById.clear();
+      (data.sections || []).forEach(s => {
+        const section = { id: s.id, name: s.name || '', rows: [], rowById: new Map() };
+        (s.rows || []).forEach(r => {
+          const row = {
+            id: r.id, emoji: r.emoji || '✏️', name: r.name || '',
+            detail: r.detail || '', link: r.link || '', amount: r.amount || '', hidden: !!r.hidden
+          };
+          section.rows.push(row);
+          section.rowById.set(row.id, row);
+        });
+        sections.push(section);
+        sectionById.set(section.id, section);
+      });
+      return data;
+    } catch(e) { return null; }
+  }
+
+  // Save indicator toast
+  let savedTimer = null;
+  function showSaved() {
+    const el = document.getElementById('save-indicator');
+    if (!el) return;
+    el.classList.add('visible');
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => el.classList.remove('visible'), 1800);
+  }
+
+  // --- Data helpers ---
+  function newRow() {
+    return { id: rowCounter++, emoji: '✏️', name: '', detail: '', link: '', amount: '', hidden: false };
+  }
+
+  // --- Section operations (incremental DOM updates) ---
   function addSection(name = '') {
-    const id = sectionCounter++;
-    sections.push({ id, name, rows: [] });
-    addRow(id);
-    render();
+    const section = { id: sectionCounter++, name, rows: [], rowById: new Map() };
+    sections.push(section);
+    sectionById.set(section.id, section);
+    const row = newRow();
+    section.rows.push(row);
+    section.rowById.set(row.id, row);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'section-wrapper';
+    wrapper.dataset.sectionId = section.id;
+    wrapper.innerHTML = sectionHTML(section);
+    elSectionsContainer.appendChild(wrapper);
+    recalculate();
+    saveToStorage();
   }
 
   function removeSection(id) {
-    sections = sections.filter(s => s.id !== id);
-    render();
+    const idx = sections.findIndex(s => s.id === id);
+    if (idx === -1) return;
+    sections.splice(idx, 1);
+    sectionById.delete(id);
+    elSectionsContainer.querySelector(`.section-wrapper[data-section-id="${id}"]`)?.remove();
+    recalculate();
+    saveToStorage();
   }
 
   function addRow(sectionId) {
-    const section = sections.find(s => s.id === sectionId);
+    const section = sectionById.get(sectionId);
     if (!section) return;
-    section.rows.push({ id: rowCounter++, emoji: '✏️', name: '', detail: '', link: '', amount: '', hidden: false });
-    render();
-  }
+    const row = newRow();
+    section.rows.push(row);
+    section.rowById.set(row.id, row);
 
-  function toggleHide(sectionId, rowId) {
-    const section = sections.find(s => s.id === sectionId);
-    if (!section) return;
-    const row = section.rows.find(r => r.id === rowId);
-    if (!row) return;
-    row.hidden = !row.hidden;
-    render();
+    const grid = elSectionsContainer.querySelector(`.budget-grid[data-section-id="${sectionId}"]`);
+    if (grid) grid.insertAdjacentHTML('beforeend', rowHTML(sectionId, row));
+    recalculate();
+    saveToStorage();
   }
 
   function removeRow(sectionId, rowId) {
-    const section = sections.find(s => s.id === sectionId);
+    const section = sectionById.get(sectionId);
     if (!section) return;
-    section.rows = section.rows.filter(r => r.id !== rowId);
-    render();
-  }
-
-  function render() {
-    const container = document.getElementById('sections-container');
-    container.innerHTML = '';
-    sections.forEach(section => {
-      const div = document.createElement('div');
-      div.innerHTML = `
-        <div class="section-header">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);">Category</span>
-            <input class="section-name-input" type="text"
-              placeholder="e.g. Flights, Hotels, Parks..."
-              value="${escHtml(section.name)}" data-sid="${section.id}"
-              style="border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:var(--dark);letter-spacing:0.05em;width:220px;" />
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button class="add-row-btn" data-sid="${section.id}">+ Add Item</button>
-            <button class="delete-btn" style="opacity:1;position:static;" data-sid-del="${section.id}">✕ Remove</button>
-          </div>
-        </div>
-        <div class="budget-grid">${section.rows.map(row => renderRow(section.id, row)).join('')}</div>
-      `;
-      container.appendChild(div);
-    });
-    bindEvents();
+    const idx = section.rows.findIndex(r => r.id === rowId);
+    if (idx === -1) return;
+    section.rows.splice(idx, 1);
+    section.rowById.delete(rowId);
+    elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`)?.remove();
     recalculate();
+    saveToStorage();
   }
 
-  function renderRow(sectionId, row) {
+  function toggleHide(sectionId, rowId) {
+    const section = sectionById.get(sectionId);
+    if (!section) return;
+    const row = section.rowById.get(rowId);
+    if (!row) return;
+    row.hidden = !row.hidden;
+    const rowEl = elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`);
+    if (rowEl) {
+      rowEl.classList.toggle('hidden-row', row.hidden);
+      const hideBtn = rowEl.querySelector(`[data-row-hide="${rowId}"]`);
+      if (hideBtn) {
+        hideBtn.classList.toggle('active', row.hidden);
+        hideBtn.title = row.hidden ? 'Show item' : 'Hide item';
+        hideBtn.textContent = row.hidden ? '👁️' : '🙈';
+      }
+    }
+    scheduleRecalc();
+    saveToStorage();
+  }
+
+  // --- HTML builders ---
+  function sectionHTML(section) {
+    return `
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);">Category</span>
+          <input class="section-name-input" type="text"
+            placeholder="e.g. Flights, Hotels, Parks..."
+            value="${escHtml(section.name)}" data-sid="${section.id}"
+            style="border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:var(--dark);letter-spacing:0.05em;width:220px;" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="add-row-btn" data-sid="${section.id}">+ Add Item</button>
+          <button class="delete-btn" style="opacity:1;position:static;" data-sid-del="${section.id}">✕ Remove</button>
+        </div>
+      </div>
+      <div class="budget-grid" data-section-id="${section.id}">${section.rows.map(r => rowHTML(section.id, r)).join('')}</div>
+    `;
+  }
+
+  function rowHTML(sectionId, row) {
     return `
       <div class="budget-row ${row.hidden ? 'hidden-row' : ''}" data-row-id="${row.id}" data-sid="${sectionId}">
         <div class="row-icon-picker" title="Click to change emoji">
@@ -533,51 +665,68 @@
     `;
   }
 
-  function bindEvents() {
-    document.querySelectorAll('.section-name-input').forEach(el => {
-      el.addEventListener('input', e => {
-        const s = sections.find(s => s.id == e.target.dataset.sid);
-        if (s) s.name = e.target.value;
-        recalculate();
-      });
+  // --- Full render (initial load + clearAll only) ---
+  function renderAll() {
+    elSectionsContainer.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    sections.forEach(section => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'section-wrapper';
+      wrapper.dataset.sectionId = section.id;
+      wrapper.innerHTML = sectionHTML(section);
+      frag.appendChild(wrapper);
     });
-    document.querySelectorAll('[data-sid].add-row-btn').forEach(btn => {
-      btn.addEventListener('click', () => addRow(parseInt(btn.dataset.sid)));
+    elSectionsContainer.appendChild(frag);
+    recalculate();
+  }
+
+  // --- Event delegation ---
+  function initEventDelegation() {
+    elSectionsContainer.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const sid = btn.dataset.sid !== undefined ? parseInt(btn.dataset.sid) : NaN;
+      if (btn.dataset.sidDel !== undefined) {
+        removeSection(parseInt(btn.dataset.sidDel));
+      } else if (btn.dataset.rowHide !== undefined) {
+        toggleHide(sid, parseInt(btn.dataset.rowHide));
+      } else if (btn.dataset.rowDel !== undefined) {
+        removeRow(sid, parseInt(btn.dataset.rowDel));
+      } else if (btn.classList.contains('add-row-btn') && !isNaN(sid)) {
+        addRow(sid);
+      }
     });
-    document.querySelectorAll('[data-sid-del]').forEach(btn => {
-      btn.addEventListener('click', () => removeSection(parseInt(btn.dataset.sidDel)));
-    });
-    document.querySelectorAll('[data-row-hide]').forEach(btn => {
-      btn.addEventListener('click', () => toggleHide(parseInt(btn.dataset.sid), parseInt(btn.dataset.rowHide)));
-    });
-    document.querySelectorAll('[data-row-del]').forEach(btn => {
-      btn.addEventListener('click', () => removeRow(parseInt(btn.dataset.sid), parseInt(btn.dataset.rowDel)));
-    });
-    document.querySelectorAll('[data-field][data-row]').forEach(el => {
-      el.addEventListener('input', e => {
-        const section = sections.find(s => s.id == e.target.dataset.sid);
+
+    elSectionsContainer.addEventListener('input', e => {
+      const el = e.target;
+      if (el.classList.contains('section-name-input')) {
+        const s = sectionById.get(parseInt(el.dataset.sid));
+        if (s) s.name = el.value;
+        scheduleRecalc();
+        saveToStorage();
+      } else if (el.dataset.field !== undefined && el.dataset.row !== undefined) {
+        const section = sectionById.get(parseInt(el.dataset.sid));
         if (!section) return;
-        const row = section.rows.find(r => r.id == e.target.dataset.row);
+        const row = section.rowById.get(parseInt(el.dataset.row));
         if (!row) return;
-        row[e.target.dataset.field] = e.target.value;
-        if (e.target.dataset.field === 'link') {
-          const btn = document.querySelector(`[data-link-btn="${e.target.dataset.row}"]`);
-          if (btn) { const v = e.target.value.trim(); btn.href = v; btn.classList.toggle('visible', v.length > 0); }
+        row[el.dataset.field] = el.value;
+        if (el.dataset.field === 'link') {
+          const linkBtn = elSectionsContainer.querySelector(`[data-link-btn="${el.dataset.row}"]`);
+          if (linkBtn) { const v = el.value.trim(); linkBtn.href = v; linkBtn.classList.toggle('visible', v.length > 0); }
         }
-        recalculate();
-      });
-    });
-    document.querySelectorAll('.emoji-input').forEach(el => {
-      el.addEventListener('input', e => {
-        const val = e.target.value.trim() || '✏️';
-        const section = sections.find(s => s.id == e.target.dataset.sid);
+        scheduleRecalc();
+        saveToStorage();
+      } else if (el.classList.contains('emoji-input')) {
+        const val = el.value.trim() || '✏️';
+        const section = sectionById.get(parseInt(el.dataset.sid));
         if (!section) return;
-        const row = section.rows.find(r => r.id == e.target.dataset.emojiRow);
+        const row = section.rowById.get(parseInt(el.dataset.emojiRow));
         if (!row) return;
         row.emoji = val;
-        const d = e.target.parentElement.querySelector('.emoji-display');
+        const d = el.parentElement.querySelector('.emoji-display');
         if (d) d.textContent = val;
-      });
+        saveToStorage();
+      }
     });
   }
 
@@ -591,14 +740,14 @@
       if (section.name || sTotal) summaryRows.push({ name: section.name || 'Unnamed', amount: sTotal });
     });
 
-    document.getElementById('grandTotal').textContent = '$' + fmt(total);
-    document.getElementById('summaryTotal').textContent = '$' + fmt(total);
+    const formatted = '$' + fmt(total);
+    elGrandTotal.textContent = formatted;
+    elSummaryTotal.textContent = formatted;
 
-    const people = parseInt(document.getElementById('numPeople').value) || 1;
-    document.getElementById('ppAmount').textContent = '$' + fmt(total / people);
+    const people = parseInt(elNumPeople.value) || 1;
+    elPpAmount.textContent = '$' + fmt(total / people);
 
-    const tbody = document.getElementById('summaryBody');
-    tbody.innerHTML = summaryRows.length === 0
+    elSummaryBody.innerHTML = summaryRows.length === 0
       ? '<tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>'
       : summaryRows.map(r => `<tr><td class="s-name">${escHtml(r.name)}</td><td class="s-amount">$${fmt(r.amount)}</td></tr>`).join('');
   }
@@ -611,18 +760,104 @@
 
   function clearAll() {
     if (!confirm('Clear everything and start fresh?')) return;
-    sections = []; sectionCounter = 0; rowCounter = 0;
+    sections = []; sectionById.clear(); sectionCounter = 0; rowCounter = 0;
     ['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).value = '');
     document.querySelectorAll('.meta-field').forEach(f => f.value = '');
     document.querySelector('.notes-area').value = '';
-    render();
+    localStorage.removeItem(STORAGE_KEY);
+    renderAll();
   }
 
-  addSection('Flights');
-  addSection('Ground Transport');
-  addSection('Accommodation');
-  addSection('Theme Parks');
-  addSection('Food & Extras');
+  // --- Default data ---
+  function initDefaultData() {
+    const raw = [
+      {
+        name: 'Flights',
+        rows: [
+          { emoji: '✏️', name: 'YUL to MCO - MCO to YUL', detail: '✈️ AC 1636 · May 23 15:10→18:31 non-stop (3h21m) · ✈️ AC 1641 · Jun 5 19:30→22:46 non-stop (3h16m) · Air Canada Rouge · Economy Standard · 2 Adults', link: 'https://www.aircanada.com/booking/ca/en/aco/review-trip', amount: '1566.36', hidden: false }
+        ]
+      },
+      {
+        name: 'Ground Transport',
+        rows: [
+          { emoji: '✏️', name: 'Economy car', detail: '', link: 'https://www.expedia.ca/carsearch/details?selCC=%5Bmini%2Ceconomy%2Ccompact%5D&date1=23%2F05%2', amount: '269.39', hidden: false },
+          { emoji: '✏️', name: 'Train SAINTE-FOY To MONTREAL - CENTRAL STATION', detail: 'Via Rail · May 23, 2026 SAINTE-FOY to DORVAL, Train #35 · Dep. 8:34 · Jun 6, 2026 DORVAL to SAINTE-FOY', link: 'https://reservia.viarail.ca/en/booking/create/trip/2?type=roundTrip&ADT=2&travels=SFOY_MTRL_2026-05-23', amount: '197.76', hidden: false }
+        ]
+      },
+      {
+        name: 'Accommodation',
+        rows: [
+          { emoji: '✏️', name: 'B&B Hotel Orlando International Drive Near Universal', detail: '', link: 'https://www.expedia.ca/Hotel-Search?regionId=5194573&destination=Orlando%2C%20FL%2C%20United%20States', amount: '461.21', hidden: true },
+          { emoji: '✏️', name: 'Cozy hotel room in Developer Inn Express Resort', detail: '', link: 'https://www.expedia.ca/Orlando-Hotels-Impeccably-Cozy-Hotel-Room-Developer-Inn-Express.h102600599.Hotel', amount: '363.68', hidden: false }
+        ]
+      },
+      {
+        name: 'Theme Parks',
+        rows: [
+          { emoji: '✏️', name: 'Universal 2-Park Express Pass', detail: '1 day pass', link: 'https://www.undercovertourist.com/cart/', amount: '518.94', hidden: true },
+          { emoji: '✏️', name: '2-Day Universal Express Pass (including Universal Epic Universe)', detail: '', link: 'https://www.undercovertourist.com/orlando/universal-orlando-resort/', amount: '579.64', hidden: false }
+        ]
+      },
+      {
+        name: 'Food & Extras',
+        rows: [
+          { emoji: '✏️', name: 'Food & Activities', detail: '', link: '', amount: '770', hidden: true },
+          { emoji: '✏️', name: 'Rainbow inner tubing', detail: '', link: 'https://visitrainbowsprings.com/tubing/', amount: '30.00', hidden: true }
+        ]
+      }
+    ];
+
+    raw.forEach(s => {
+      const section = { id: sectionCounter++, name: s.name, rows: [], rowById: new Map() };
+      sections.push(section);
+      sectionById.set(section.id, section);
+      s.rows.forEach(r => {
+        const row = { id: rowCounter++, ...r };
+        section.rows.push(row);
+        section.rowById.set(row.id, row);
+      });
+    });
+  }
+
+  // --- Init ---
+  elGrandTotal        = document.getElementById('grandTotal');
+  elSummaryTotal      = document.getElementById('summaryTotal');
+  elNumPeople         = document.getElementById('numPeople');
+  elPpAmount          = document.getElementById('ppAmount');
+  elSummaryBody       = document.getElementById('summaryBody');
+  elSectionsContainer = document.getElementById('sections-container');
+
+  // Try to restore from localStorage; fall back to default data
+  const saved = loadFromStorage();
+  if (saved) {
+    document.getElementById('tripName').value      = saved.tripName || '';
+    document.getElementById('tripDates').value     = saved.tripDates || '';
+    document.getElementById('tripTravelers').value = saved.tripTravelers || '';
+    const mf = document.querySelectorAll('.meta-field');
+    (saved.meta || []).forEach((v, i) => { if (mf[i]) mf[i].value = v; });
+    document.querySelector('.notes-area').value = saved.notes || '';
+    if (saved.numPeople) elNumPeople.value = saved.numPeople;
+  } else {
+    initDefaultData();
+    document.getElementById('tripName').value = 'Fred and Ariel Adventure';
+    document.getElementById('tripDates').value = 'May 23 - June 5';
+    document.getElementById('tripTravelers').value = 'Fred & Ariel';
+    const metaFields = document.querySelectorAll('.meta-field');
+    if (metaFields[0]) metaFields[0].value = 'Direct YUL - MCO';
+    if (metaFields[1]) metaFields[1].value = '3 nights + more';
+    if (metaFields[2]) metaFields[2].value = '9 free days';
+  }
+
+  renderAll();
+  initEventDelegation();
+
+  // Auto-save when hero / meta / notes / numPeople change
+  ['tripName','tripDates','tripTravelers'].forEach(id =>
+    document.getElementById(id).addEventListener('input', saveToStorage)
+  );
+  document.querySelectorAll('.meta-field').forEach(f => f.addEventListener('input', saveToStorage));
+  document.querySelector('.notes-area').addEventListener('input', saveToStorage);
+  elNumPeople.addEventListener('input', saveToStorage);
 </script>
 </body>
 </html>
