@@ -324,6 +324,19 @@
   .footer { text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px solid #eee; color: var(--muted); font-size: 0.82rem; }
   .footer .emoji-row { font-size: 1.5rem; margin-bottom: 8px; letter-spacing: 0.3em; }
 
+  /* Save indicator */
+  #save-indicator {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--lime); color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+    padding: 8px 18px; border-radius: 100px;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none; z-index: 999;
+    box-shadow: 0 4px 12px rgba(82,183,136,0.3);
+  }
+  #save-indicator.visible { opacity: 1; transform: translateY(0); }
+
   @media (max-width: 600px) {
     .hero { padding: 40px 20px 100px; }
     .total-card { padding: 24px; }
@@ -435,6 +448,8 @@
   </div>
 </div>
 
+<div id="save-indicator">✓ Saved</div>
+
 <script>
   // --- State ---
   let sections = [];
@@ -449,6 +464,71 @@
   function scheduleRecalc() {
     clearTimeout(recalcTimer);
     recalcTimer = setTimeout(recalculate, 30);
+  }
+
+  // --- localStorage persistence ---
+  const STORAGE_KEY = 'florida_trip_budget_v1';
+
+  function saveToStorage() {
+    try {
+      const data = {
+        v: 1,
+        sectionCounter,
+        rowCounter,
+        sections: sections.map(s => ({
+          id: s.id, name: s.name,
+          rows: s.rows.map(r => ({
+            id: r.id, emoji: r.emoji, name: r.name,
+            detail: r.detail, link: r.link, amount: r.amount, hidden: r.hidden
+          }))
+        })),
+        tripName:      document.getElementById('tripName').value,
+        tripDates:     document.getElementById('tripDates').value,
+        tripTravelers: document.getElementById('tripTravelers').value,
+        meta:          Array.from(document.querySelectorAll('.meta-field')).map(f => f.value),
+        notes:         document.querySelector('.notes-area').value,
+        numPeople:     elNumPeople ? elNumPeople.value : '2'
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      showSaved();
+    } catch(e) {}
+  }
+
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (!data || data.v !== 1) return null;
+      sectionCounter = data.sectionCounter || 0;
+      rowCounter     = data.rowCounter || 0;
+      sections = [];
+      sectionById.clear();
+      (data.sections || []).forEach(s => {
+        const section = { id: s.id, name: s.name || '', rows: [], rowById: new Map() };
+        (s.rows || []).forEach(r => {
+          const row = {
+            id: r.id, emoji: r.emoji || '✏️', name: r.name || '',
+            detail: r.detail || '', link: r.link || '', amount: r.amount || '', hidden: !!r.hidden
+          };
+          section.rows.push(row);
+          section.rowById.set(row.id, row);
+        });
+        sections.push(section);
+        sectionById.set(section.id, section);
+      });
+      return data;
+    } catch(e) { return null; }
+  }
+
+  // Save indicator toast
+  let savedTimer = null;
+  function showSaved() {
+    const el = document.getElementById('save-indicator');
+    if (!el) return;
+    el.classList.add('visible');
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => el.classList.remove('visible'), 1800);
   }
 
   // --- Data helpers ---
@@ -471,6 +551,7 @@
     wrapper.innerHTML = sectionHTML(section);
     elSectionsContainer.appendChild(wrapper);
     recalculate();
+    saveToStorage();
   }
 
   function removeSection(id) {
@@ -480,6 +561,7 @@
     sectionById.delete(id);
     elSectionsContainer.querySelector(`.section-wrapper[data-section-id="${id}"]`)?.remove();
     recalculate();
+    saveToStorage();
   }
 
   function addRow(sectionId) {
@@ -492,6 +574,7 @@
     const grid = elSectionsContainer.querySelector(`.budget-grid[data-section-id="${sectionId}"]`);
     if (grid) grid.insertAdjacentHTML('beforeend', rowHTML(sectionId, row));
     recalculate();
+    saveToStorage();
   }
 
   function removeRow(sectionId, rowId) {
@@ -503,6 +586,7 @@
     section.rowById.delete(rowId);
     elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`)?.remove();
     recalculate();
+    saveToStorage();
   }
 
   function toggleHide(sectionId, rowId) {
@@ -522,6 +606,7 @@
       }
     }
     scheduleRecalc();
+    saveToStorage();
   }
 
   // --- HTML builders ---
@@ -618,6 +703,7 @@
         const s = sectionById.get(parseInt(el.dataset.sid));
         if (s) s.name = el.value;
         scheduleRecalc();
+        saveToStorage();
       } else if (el.dataset.field !== undefined && el.dataset.row !== undefined) {
         const section = sectionById.get(parseInt(el.dataset.sid));
         if (!section) return;
@@ -629,6 +715,7 @@
           if (linkBtn) { const v = el.value.trim(); linkBtn.href = v; linkBtn.classList.toggle('visible', v.length > 0); }
         }
         scheduleRecalc();
+        saveToStorage();
       } else if (el.classList.contains('emoji-input')) {
         const val = el.value.trim() || '✏️';
         const section = sectionById.get(parseInt(el.dataset.sid));
@@ -638,6 +725,7 @@
         row.emoji = val;
         const d = el.parentElement.querySelector('.emoji-display');
         if (d) d.textContent = val;
+        saveToStorage();
       }
     });
   }
@@ -676,11 +764,12 @@
     ['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).value = '');
     document.querySelectorAll('.meta-field').forEach(f => f.value = '');
     document.querySelector('.notes-area').value = '';
+    localStorage.removeItem(STORAGE_KEY);
     renderAll();
   }
 
-  // --- Initial data ---
-  (function initData() {
+  // --- Default data ---
+  function initDefaultData() {
     const raw = [
       {
         name: 'Flights',
@@ -728,9 +817,9 @@
         section.rowById.set(row.id, row);
       });
     });
-  })();
+  }
 
-  // Cache DOM refs once
+  // --- Init ---
   elGrandTotal        = document.getElementById('grandTotal');
   elSummaryTotal      = document.getElementById('summaryTotal');
   elNumPeople         = document.getElementById('numPeople');
@@ -738,16 +827,37 @@
   elSummaryBody       = document.getElementById('summaryBody');
   elSectionsContainer = document.getElementById('sections-container');
 
-  renderAll();
+  // Try to restore from localStorage; fall back to default data
+  const saved = loadFromStorage();
+  if (saved) {
+    document.getElementById('tripName').value      = saved.tripName || '';
+    document.getElementById('tripDates').value     = saved.tripDates || '';
+    document.getElementById('tripTravelers').value = saved.tripTravelers || '';
+    const mf = document.querySelectorAll('.meta-field');
+    (saved.meta || []).forEach((v, i) => { if (mf[i]) mf[i].value = v; });
+    document.querySelector('.notes-area').value = saved.notes || '';
+    if (saved.numPeople) elNumPeople.value = saved.numPeople;
+  } else {
+    initDefaultData();
+    document.getElementById('tripName').value = 'Fred and Ariel Adventure';
+    document.getElementById('tripDates').value = 'May 23 - June 5';
+    document.getElementById('tripTravelers').value = 'Fred & Ariel';
+    const metaFields = document.querySelectorAll('.meta-field');
+    if (metaFields[0]) metaFields[0].value = 'Direct YUL - MCO';
+    if (metaFields[1]) metaFields[1].value = '3 nights + more';
+    if (metaFields[2]) metaFields[2].value = '9 free days';
+  }
 
-  document.getElementById('tripName').value = 'Fred and Ariel Adventure';
-  document.getElementById('tripDates').value = 'May 23 - June 5';
-  document.getElementById('tripTravelers').value = 'Fred & Ariel';
-  const metaFields = document.querySelectorAll('.meta-field');
-  if (metaFields[0]) metaFields[0].value = 'Direct YUL - MCO';
-  if (metaFields[1]) metaFields[1].value = '3 nights + more';
-  if (metaFields[2]) metaFields[2].value = '9 free days';
+  renderAll();
   initEventDelegation();
+
+  // Auto-save when hero / meta / notes / numPeople change
+  ['tripName','tripDates','tripTravelers'].forEach(id =>
+    document.getElementById(id).addEventListener('input', saveToStorage)
+  );
+  document.querySelectorAll('.meta-field').forEach(f => f.addEventListener('input', saveToStorage));
+  document.querySelector('.notes-area').addEventListener('input', saveToStorage);
+  elNumPeople.addEventListener('input', saveToStorage);
 </script>
 </body>
 </html>
