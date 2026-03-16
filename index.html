@@ -124,6 +124,36 @@
   .meta-field::placeholder { color: rgba(255,255,255,0.3); }
   .meta-field:focus { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); }
 
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .tab-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 24px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; border: 2px solid var(--border);
+    background: #fff; color: var(--muted);
+    transition: all 0.22s; letter-spacing: 0.01em;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  .tab-btn.active {
+    background: var(--ocean); color: #fff;
+    border-color: var(--ocean);
+    box-shadow: 0 4px 16px rgba(10,77,110,0.28);
+  }
+  .tab-btn:hover:not(.active) { border-color: var(--sky); color: var(--sky); background: rgba(26,122,154,0.04); }
+  .tab-amount {
+    font-family: 'Playfair Display', serif; font-size: 0.85rem; font-weight: 700;
+    background: rgba(0,0,0,0.07); padding: 2px 9px; border-radius: 100px;
+    transition: background 0.2s;
+  }
+  .tab-btn.active .tab-amount { background: rgba(255,255,255,0.18); color: #ffd166; }
+
+  /* Section visibility by active tab — sections stay in DOM, CSS toggles */
+  #sections-container[data-active-tab="0"] .section-wrapper[data-section-tab="1"] { display: none; }
+  #sections-container[data-active-tab="1"] .section-wrapper[data-section-tab="0"] { display: none; }
+
   /* Sections */
   .section-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -212,7 +242,6 @@
   .link-go-btn:hover { background: var(--ocean); }
   .link-go-btn.visible { display: inline-block; }
 
-  /* Single amount */
   .row-amount-wrap {
     text-align: right; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
@@ -273,6 +302,17 @@
   .s-amount { font-weight: 700; color: var(--sky); text-align: right; font-family: 'Playfair Display', serif; }
   .total-row td { font-weight: 700; background: #f8fafc; font-size: 0.95rem; border-top: 2px solid var(--sky); }
   .total-row .s-amount { font-size: 1.15rem; color: var(--ocean); }
+  .summary-tab-header td {
+    padding: 8px 18px 4px;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+    background: #fafafa; border-bottom: 1px solid #eee;
+  }
+  .summary-subtotal td {
+    font-size: 0.8rem; color: var(--muted); background: #f8f8f8;
+    padding: 7px 18px 7px 28px; border-top: 1px dashed #eee;
+  }
+  .summary-subtotal .s-amount { color: var(--muted); font-size: 0.88rem; }
 
   /* Per person */
   .pp-wrap { display: flex; gap: 14px; flex-wrap: wrap; }
@@ -342,6 +382,7 @@
     .total-card { padding: 24px; }
     .total-meta { align-items: flex-start; }
     .meta-field { width: 160px; }
+    .tab-btn { font-size: 0.82rem; padding: 9px 16px; }
   }
 </style>
 </head>
@@ -374,7 +415,7 @@
     <div>
       <div class="total-label">Total Cost</div>
       <div class="total-amount" id="grandTotal">$0</div>
-      <div class="total-note">CAD · updates as you fill in amounts</div>
+      <div class="total-note">CAD · all tabs combined</div>
     </div>
     <div class="total-meta">
       <input class="meta-field" type="text" placeholder="✈️ e.g. Direct flight YQB→MCO" />
@@ -383,7 +424,17 @@
     </div>
   </div>
 
-  <div id="sections-container"></div>
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="0" onclick="switchTab(0)">
+      ✈️ Bookings <span class="tab-amount" id="tab0Total"></span>
+    </button>
+    <button class="tab-btn" data-tab="1" onclick="switchTab(1)">
+      🍽️ Food &amp; Fun <span class="tab-amount" id="tab1Total"></span>
+    </button>
+  </div>
+
+  <div id="sections-container" data-active-tab="0"></div>
 
   <div style="margin-top:24px;text-align:center;">
     <button class="add-row-btn" style="font-size:0.85rem;padding:9px 22px;" onclick="addSection()">+ Add Category</button>
@@ -433,7 +484,7 @@
 
   <!-- Notes -->
   <div class="section-header" style="margin-top:36px;">
-    <div class="section-label">📝 Notes & Reminders</div>
+    <div class="section-label">📝 Notes &amp; Reminders</div>
   </div>
   <textarea class="notes-area" placeholder="e.g. Book Air Transat flights ASAP · Use Undercover Tourist for park tickets · Return car at DAB on May 28 · Family drives to MCO on June 5..."></textarea>
 
@@ -453,10 +504,11 @@
 <script>
   // --- State ---
   let sections = [];
-  let sectionById = new Map();   // O(1) section lookup
+  let sectionById = new Map();
   let sectionCounter = 0, rowCounter = 0;
+  let activeTab = 0; // 0 = Bookings, 1 = Food & Fun
 
-  // Cached DOM refs (set after DOM ready)
+  // Cached DOM refs
   let elGrandTotal, elSummaryTotal, elNumPeople, elPpAmount, elSummaryBody, elSectionsContainer;
 
   // --- Debounced recalculate ---
@@ -466,17 +518,28 @@
     recalcTimer = setTimeout(recalculate, 30);
   }
 
-  // --- localStorage persistence ---
+  // --- Tab switching ---
+  function switchTab(tab) {
+    activeTab = tab;
+    elSectionsContainer.dataset.activeTab = String(tab);
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.tab) === tab);
+    });
+    saveToStorage();
+  }
+
+  // --- localStorage persistence (v2 adds tab support) ---
   const STORAGE_KEY = 'florida_trip_budget_v1';
 
   function saveToStorage() {
     try {
       const data = {
-        v: 1,
+        v: 2,
         sectionCounter,
         rowCounter,
+        activeTab,
         sections: sections.map(s => ({
-          id: s.id, name: s.name,
+          id: s.id, name: s.name, tab: s.tab || 0,
           rows: s.rows.map(r => ({
             id: r.id, emoji: r.emoji, name: r.name,
             detail: r.detail, link: r.link, amount: r.amount, hidden: r.hidden
@@ -498,14 +561,28 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
-      const data = JSON.parse(raw);
-      if (!data || data.v !== 1) return null;
+      let data = JSON.parse(raw);
+      if (!data) return null;
+
+      // Migrate v1 → v2: assign tab based on section name
+      if (data.v === 1) {
+        data.sections = (data.sections || []).map(s => ({
+          ...s,
+          tab: /food|activities|fun|extra/i.test(s.name) ? 1 : 0
+        }));
+        data.v = 2;
+        data.activeTab = 0;
+      }
+
+      if (data.v !== 2) return null;
+
       sectionCounter = data.sectionCounter || 0;
       rowCounter     = data.rowCounter || 0;
+      activeTab      = typeof data.activeTab === 'number' ? data.activeTab : 0;
       sections = [];
       sectionById.clear();
       (data.sections || []).forEach(s => {
-        const section = { id: s.id, name: s.name || '', rows: [], rowById: new Map() };
+        const section = { id: s.id, name: s.name || '', tab: s.tab || 0, rows: [], rowById: new Map() };
         (s.rows || []).forEach(r => {
           const row = {
             id: r.id, emoji: r.emoji || '✏️', name: r.name || '',
@@ -538,7 +615,7 @@
 
   // --- Section operations (incremental DOM updates) ---
   function addSection(name = '') {
-    const section = { id: sectionCounter++, name, rows: [], rowById: new Map() };
+    const section = { id: sectionCounter++, name, tab: activeTab, rows: [], rowById: new Map() };
     sections.push(section);
     sectionById.set(section.id, section);
     const row = newRow();
@@ -548,6 +625,7 @@
     const wrapper = document.createElement('div');
     wrapper.className = 'section-wrapper';
     wrapper.dataset.sectionId = section.id;
+    wrapper.dataset.sectionTab = section.tab;
     wrapper.innerHTML = sectionHTML(section);
     elSectionsContainer.appendChild(wrapper);
     recalculate();
@@ -570,7 +648,6 @@
     const row = newRow();
     section.rows.push(row);
     section.rowById.set(row.id, row);
-
     const grid = elSectionsContainer.querySelector(`.budget-grid[data-section-id="${sectionId}"]`);
     if (grid) grid.insertAdjacentHTML('beforeend', rowHTML(sectionId, row));
     recalculate();
@@ -673,6 +750,7 @@
       const wrapper = document.createElement('div');
       wrapper.className = 'section-wrapper';
       wrapper.dataset.sectionId = section.id;
+      wrapper.dataset.sectionTab = section.tab || 0;
       wrapper.innerHTML = sectionHTML(section);
       frag.appendChild(wrapper);
     });
@@ -730,26 +808,53 @@
     });
   }
 
+  // --- Recalculate (both tabs always included in grand total) ---
   function recalculate() {
-    let total = 0;
-    const summaryRows = [];
+    let grandTotal = 0;
+    const tabTotals = [0, 0];
+    const tabRows   = [[], []];
+
     sections.forEach(section => {
       let sTotal = 0;
       section.rows.forEach(row => { if (!row.hidden) sTotal += parseFloat(row.amount) || 0; });
-      total += sTotal;
-      if (section.name || sTotal) summaryRows.push({ name: section.name || 'Unnamed', amount: sTotal });
+      grandTotal += sTotal;
+      const t = section.tab || 0;
+      tabTotals[t] += sTotal;
+      if (section.name || sTotal) tabRows[t].push({ name: section.name || 'Unnamed', amount: sTotal });
     });
 
-    const formatted = '$' + fmt(total);
+    // Grand total card
+    const formatted = '$' + fmt(grandTotal);
     elGrandTotal.textContent = formatted;
     elSummaryTotal.textContent = formatted;
 
+    // Per person
     const people = parseInt(elNumPeople.value) || 1;
-    elPpAmount.textContent = '$' + fmt(total / people);
+    elPpAmount.textContent = '$' + fmt(grandTotal / people);
 
-    elSummaryBody.innerHTML = summaryRows.length === 0
-      ? '<tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>'
-      : summaryRows.map(r => `<tr><td class="s-name">${escHtml(r.name)}</td><td class="s-amount">$${fmt(r.amount)}</td></tr>`).join('');
+    // Tab button amounts
+    const TAB_LABELS = ['✈️ Bookings', '🍽️ Food & Fun'];
+    [0, 1].forEach(t => {
+      const el = document.getElementById(`tab${t}Total`);
+      if (el) el.textContent = tabTotals[t] ? '$' + fmt(tabTotals[t]) : '';
+    });
+
+    // Summary table: grouped by tab with subtotals
+    let html = '';
+    let hasAny = false;
+    [0, 1].forEach(t => {
+      if (!tabRows[t].length) return;
+      hasAny = true;
+      html += `<tr class="summary-tab-header"><td colspan="2">${TAB_LABELS[t]}</td></tr>`;
+      html += tabRows[t].map(r =>
+        `<tr><td class="s-name" style="padding-left:28px;">${escHtml(r.name)}</td><td class="s-amount">$${fmt(r.amount)}</td></tr>`
+      ).join('');
+      html += `<tr class="summary-subtotal"><td class="s-name">Subtotal</td><td class="s-amount">$${fmt(tabTotals[t])}</td></tr>`;
+    });
+
+    elSummaryBody.innerHTML = hasAny
+      ? html
+      : '<tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>';
   }
 
   function fmt(n) { return Math.round(n).toLocaleString(); }
@@ -761,10 +866,15 @@
   function clearAll() {
     if (!confirm('Clear everything and start fresh?')) return;
     sections = []; sectionById.clear(); sectionCounter = 0; rowCounter = 0;
+    activeTab = 0;
     ['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).value = '');
     document.querySelectorAll('.meta-field').forEach(f => f.value = '');
     document.querySelector('.notes-area').value = '';
     localStorage.removeItem(STORAGE_KEY);
+    elSectionsContainer.dataset.activeTab = '0';
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === '0');
+    });
     renderAll();
   }
 
@@ -772,34 +882,34 @@
   function initDefaultData() {
     const raw = [
       {
-        name: 'Flights',
+        name: 'Flights', tab: 0,
         rows: [
           { emoji: '✏️', name: 'YUL to MCO - MCO to YUL', detail: '✈️ AC 1636 · May 23 15:10→18:31 non-stop (3h21m) · ✈️ AC 1641 · Jun 5 19:30→22:46 non-stop (3h16m) · Air Canada Rouge · Economy Standard · 2 Adults', link: 'https://www.aircanada.com/booking/ca/en/aco/review-trip', amount: '1566.36', hidden: false }
         ]
       },
       {
-        name: 'Ground Transport',
+        name: 'Ground Transport', tab: 0,
         rows: [
           { emoji: '✏️', name: 'Economy car', detail: '', link: 'https://www.expedia.ca/carsearch/details?selCC=%5Bmini%2Ceconomy%2Ccompact%5D&date1=23%2F05%2', amount: '269.39', hidden: false },
           { emoji: '✏️', name: 'Train SAINTE-FOY To MONTREAL - CENTRAL STATION', detail: 'Via Rail · May 23, 2026 SAINTE-FOY to DORVAL, Train #35 · Dep. 8:34 · Jun 6, 2026 DORVAL to SAINTE-FOY', link: 'https://reservia.viarail.ca/en/booking/create/trip/2?type=roundTrip&ADT=2&travels=SFOY_MTRL_2026-05-23', amount: '197.76', hidden: false }
         ]
       },
       {
-        name: 'Accommodation',
+        name: 'Accommodation', tab: 0,
         rows: [
           { emoji: '✏️', name: 'B&B Hotel Orlando International Drive Near Universal', detail: '', link: 'https://www.expedia.ca/Hotel-Search?regionId=5194573&destination=Orlando%2C%20FL%2C%20United%20States', amount: '461.21', hidden: true },
           { emoji: '✏️', name: 'Cozy hotel room in Developer Inn Express Resort', detail: '', link: 'https://www.expedia.ca/Orlando-Hotels-Impeccably-Cozy-Hotel-Room-Developer-Inn-Express.h102600599.Hotel', amount: '363.68', hidden: false }
         ]
       },
       {
-        name: 'Theme Parks',
+        name: 'Theme Parks', tab: 0,
         rows: [
           { emoji: '✏️', name: 'Universal 2-Park Express Pass', detail: '1 day pass', link: 'https://www.undercovertourist.com/cart/', amount: '518.94', hidden: true },
           { emoji: '✏️', name: '2-Day Universal Express Pass (including Universal Epic Universe)', detail: '', link: 'https://www.undercovertourist.com/orlando/universal-orlando-resort/', amount: '579.64', hidden: false }
         ]
       },
       {
-        name: 'Food & Extras',
+        name: 'Food & Extras', tab: 1,
         rows: [
           { emoji: '✏️', name: 'Food & Activities', detail: '', link: '', amount: '770', hidden: true },
           { emoji: '✏️', name: 'Rainbow inner tubing', detail: '', link: 'https://visitrainbowsprings.com/tubing/', amount: '30.00', hidden: true }
@@ -808,7 +918,7 @@
     ];
 
     raw.forEach(s => {
-      const section = { id: sectionCounter++, name: s.name, rows: [], rowById: new Map() };
+      const section = { id: sectionCounter++, name: s.name, tab: s.tab, rows: [], rowById: new Map() };
       sections.push(section);
       sectionById.set(section.id, section);
       s.rows.forEach(r => {
@@ -827,7 +937,6 @@
   elSummaryBody       = document.getElementById('summaryBody');
   elSectionsContainer = document.getElementById('sections-container');
 
-  // Try to restore from localStorage; fall back to default data
   const saved = loadFromStorage();
   if (saved) {
     document.getElementById('tripName').value      = saved.tripName || '';
@@ -849,9 +958,16 @@
   }
 
   renderAll();
+
+  // Apply active tab to UI
+  elSectionsContainer.dataset.activeTab = String(activeTab);
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.tab) === activeTab);
+  });
+
   initEventDelegation();
 
-  // Auto-save when hero / meta / notes / numPeople change
+  // Auto-save hero / meta / notes / numPeople
   ['tripName','tripDates','tripTravelers'].forEach(id =>
     document.getElementById(id).addEventListener('input', saveToStorage)
   );
