@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌴 Trip Budget Planner</title>
+<title>🌴 Trip Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
@@ -30,6 +30,7 @@
     min-height: 100vh;
   }
 
+  /* ── Hero ── */
   .hero {
     background: linear-gradient(160deg, var(--ocean) 0%, var(--sky) 50%, #1da5c4 100%);
     padding: 60px 40px 120px;
@@ -61,8 +62,7 @@
     50%       { transform: translateY(-15px) rotate(5deg); }
   }
 
-  .hero-content { position: relative; z-index: 2; text-align: center; max-width: 700px; margin: 0 auto; }
-
+  .hero-content { position: relative; z-index: 2; text-align: center; max-width: 760px; margin: 0 auto; }
   .trip-badge {
     display: inline-block;
     background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
@@ -90,12 +90,91 @@
   .hero-field::placeholder { color: rgba(255,255,255,0.4); }
   .hero-field:focus { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.5); }
 
-  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  /* ── Trip Legs ── */
+  .legs-wrap {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    justify-content: center; margin-top: 20px;
+  }
+  .leg-pill {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 16px; padding: 10px 16px;
+    display: flex; align-items: flex-start; gap: 10px;
+    backdrop-filter: blur(8px); text-align: left;
+    position: relative; min-width: 200px;
+  }
+  .leg-pill-num {
+    background: rgba(255,255,255,0.2); color: #fff;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .leg-pill-body { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .leg-name-input {
+    background: none; border: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700;
+    color: #fff; width: 100%; padding: 0;
+  }
+  .leg-name-input::placeholder { color: rgba(255,255,255,0.4); }
+  .leg-meta-row { display: flex; gap: 6px; align-items: center; }
+  .leg-meta-input {
+    background: none; border: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.72rem;
+    color: rgba(255,255,255,0.6); padding: 0;
+  }
+  .leg-meta-input::placeholder { color: rgba(255,255,255,0.3); }
+  .leg-sep { color: rgba(255,255,255,0.3); font-size: 0.7rem; }
+  .leg-remove-btn {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.3); font-size: 0.7rem;
+    padding: 2px 4px; border-radius: 4px; flex-shrink: 0;
+    transition: color 0.2s;
+  }
+  .leg-remove-btn:hover { color: rgba(255,255,255,0.8); }
+  .add-leg-btn {
+    background: rgba(255,255,255,0.08); border: 1px dashed rgba(255,255,255,0.3);
+    border-radius: 16px; color: rgba(255,255,255,0.65);
+    padding: 10px 18px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; align-self: center;
+  }
+  .add-leg-btn:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.5); }
 
-  /* Total card */
+  /* ── Countdown ── */
+  .countdown-wrap {
+    display: flex; gap: 14px; justify-content: center; margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .countdown-unit {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 16px; padding: 14px 18px; min-width: 72px;
+    text-align: center; backdrop-filter: blur(8px);
+  }
+  .countdown-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem; font-weight: 900; color: #ffd166; line-height: 1;
+  }
+  .countdown-label {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: rgba(255,255,255,0.5); margin-top: 4px;
+  }
+  .countdown-msg {
+    font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.7);
+    margin-top: 12px; letter-spacing: 0.02em;
+  }
+
+  /* ── Container ── */
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ── Dashboard top row (total + weather) ── */
+  .dashboard-top {
+    display: flex; gap: 20px; margin-bottom: 32px;
+    align-items: flex-start; flex-wrap: wrap;
+  }
+
+  /* ── Total card ── */
   .total-card {
     background: var(--dark); border-radius: 24px; padding: 36px 40px;
-    margin-bottom: 32px;
+    flex: 1; min-width: 280px;
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 24px;
     position: relative; overflow: hidden;
@@ -112,7 +191,6 @@
   .total-label { color: rgba(255,255,255,0.45); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
   .total-amount { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 700; color: #ffd166; line-height: 1; }
   .total-note { color: rgba(255,255,255,0.35); font-size: 0.78rem; margin-top: 6px; }
-
   .total-meta { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
   .meta-field {
     background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
@@ -124,18 +202,49 @@
   .meta-field::placeholder { color: rgba(255,255,255,0.3); }
   .meta-field:focus { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.3); }
 
+  /* ── Weather widget ── */
+  .weather-widget {
+    background: linear-gradient(135deg, #e3f4fb 0%, #cce8f5 100%);
+    border: 1px solid rgba(26,122,154,0.18);
+    border-radius: 24px; padding: 28px 26px;
+    width: 300px; flex-shrink: 0;
+    position: relative; overflow: hidden;
+    animation: slideUp 0.55s ease both;
+  }
+  .weather-widget::after {
+    content: '☀️'; position: absolute;
+    top: 10px; right: 14px; font-size: 3.5rem; opacity: 0.12; pointer-events: none;
+  }
+  .weather-title {
+    font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700;
+    color: var(--ocean); margin-bottom: 2px;
+  }
+  .weather-subtitle { font-size: 0.72rem; color: var(--muted); margin-bottom: 16px; font-weight: 500; }
+  .weather-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .w-stat {
+    background: rgba(255,255,255,0.65); border-radius: 12px; padding: 10px 12px;
+  }
+  .w-label { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .w-value { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--ocean); }
+  .w-sub { font-size: 0.65rem; color: var(--muted); }
+  .weather-note {
+    font-size: 0.73rem; color: var(--sky); line-height: 1.5;
+    background: rgba(26,122,154,0.08); border-radius: 8px; padding: 8px 10px;
+  }
+
   /* ── Tabs ── */
   .tab-bar {
-    display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap;
+    display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap;
   }
   .tab-btn {
-    display: flex; align-items: center; gap: 10px;
-    padding: 11px 24px; border-radius: 100px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 100px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
     cursor: pointer; border: 2px solid var(--border);
     background: #fff; color: var(--muted);
     transition: all 0.22s; letter-spacing: 0.01em;
     box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    white-space: nowrap;
   }
   .tab-btn.active {
     background: var(--ocean); color: #fff;
@@ -143,18 +252,14 @@
     box-shadow: 0 4px 16px rgba(10,77,110,0.28);
   }
   .tab-btn:hover:not(.active) { border-color: var(--sky); color: var(--sky); background: rgba(26,122,154,0.04); }
-  .tab-amount {
-    font-family: 'Playfair Display', serif; font-size: 0.85rem; font-weight: 700;
-    background: rgba(0,0,0,0.07); padding: 2px 9px; border-radius: 100px;
-    transition: background 0.2s;
+  .tab-badge {
+    font-family: 'Playfair Display', serif; font-size: 0.82rem; font-weight: 700;
+    background: rgba(0,0,0,0.07); padding: 2px 8px; border-radius: 100px;
+    transition: background 0.2s; min-width: 28px; text-align: center;
   }
-  .tab-btn.active .tab-amount { background: rgba(255,255,255,0.18); color: #ffd166; }
+  .tab-btn.active .tab-badge { background: rgba(255,255,255,0.18); color: #ffd166; }
 
-  /* Section visibility by active tab — sections stay in DOM, CSS toggles */
-  #sections-container[data-active-tab="0"] .section-wrapper[data-section-tab="1"] { display: none; }
-  #sections-container[data-active-tab="1"] .section-wrapper[data-section-tab="0"] { display: none; }
-
-  /* Sections */
+  /* ── Section styles (budget panel) ── */
   .section-header {
     display: flex; align-items: center; justify-content: space-between;
     margin-top: 36px; margin-bottom: 12px;
@@ -177,9 +282,7 @@
   }
   .add-row-btn:hover { border-color: var(--sky); color: var(--sky); background: rgba(26,122,154,0.05); }
 
-  /* Rows */
   .budget-grid { display: flex; flex-direction: column; gap: 10px; }
-
   .budget-row {
     background: #fff; border-radius: 16px; padding: 16px 20px;
     display: flex; align-items: center; gap: 14px;
@@ -189,8 +292,6 @@
     position: relative;
   }
   .budget-row:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-1px); }
-  .budget-row:hover .delete-btn { opacity: 1; }
-
   .row-icon-picker {
     width: 44px; height: 44px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
@@ -205,9 +306,7 @@
     font-size: 1.4rem; text-align: center;
     background: none; border: none; outline: none;
   }
-
   .row-info { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-
   .row-name-input, .row-detail-input {
     background: none; border: none; outline: none;
     font-family: 'DM Sans', sans-serif; color: var(--dark);
@@ -218,12 +317,10 @@
   .row-name-input:focus, .row-detail-input:focus { background: #f0f6fa; color: var(--dark); }
   .row-name-input::placeholder { color: #bbb; font-weight: 400; }
   .row-detail-input::placeholder { color: #ccc; }
-
   .row-link-wrap { display: flex; align-items: center; gap: 5px; margin-top: 1px; }
   .row-link-input {
     background: none; border: none; outline: none;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.75rem; color: var(--sky);
+    font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: var(--sky);
     width: 100%; border-radius: 6px; padding: 2px 6px;
     border-bottom: 1.5px dashed transparent; transition: background 0.15s;
   }
@@ -241,7 +338,6 @@
   }
   .link-go-btn:hover { background: var(--ocean); }
   .link-go-btn.visible { display: inline-block; }
-
   .row-amount-wrap {
     text-align: right; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
@@ -261,14 +357,11 @@
   }
   .amount-input:focus { border-color: var(--sky); }
   .amount-input::placeholder { color: #ccc; font-weight: 400; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; }
-
   .row-actions {
     position: absolute; top: 10px; right: 10px;
-    display: flex; gap: 4px; opacity: 0;
-    transition: opacity 0.2s;
+    display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s;
   }
   .budget-row:hover .row-actions { opacity: 1; }
-
   .delete-btn, .hide-btn {
     background: none; border: none; cursor: pointer;
     font-size: 0.8rem; color: #ccc;
@@ -277,14 +370,13 @@
   }
   .delete-btn:hover { color: var(--coral); background: #fff0ee; }
   .hide-btn:hover { color: var(--sky); background: #eaf6fb; }
-
   .budget-row.hidden-row .row-info,
   .budget-row.hidden-row .row-icon-picker,
   .budget-row.hidden-row .row-amount-wrap { opacity: 0.3; }
   .budget-row.hidden-row { background: #f9f9f9; }
   .hide-btn.active { color: var(--sky); opacity: 1; }
 
-  /* Summary */
+  /* ── Summary ── */
   .summary-section { margin-top: 48px; }
   .summary-title {
     font-family: 'Playfair Display', serif;
@@ -314,7 +406,7 @@
   }
   .summary-subtotal .s-amount { color: var(--muted); font-size: 0.88rem; }
 
-  /* Per person */
+  /* ── Per person ── */
   .pp-wrap { display: flex; gap: 14px; flex-wrap: wrap; }
   .pp-card {
     background: #fff; border: 1px solid var(--border);
@@ -324,20 +416,14 @@
     background: linear-gradient(135deg, var(--ocean), var(--sky));
     border-color: transparent;
   }
-  .pp-card-label {
-    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
-  }
+  .pp-card-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .pp-card.highlight .pp-card-label { color: rgba(255,255,255,0.55); }
-  .pp-card-amount {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.6rem; font-weight: 700; color: var(--dark);
-  }
+  .pp-card-amount { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--dark); }
   .pp-card.highlight .pp-card-amount { color: #ffd166; }
   .pp-card-note { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
   .pp-card.highlight .pp-card-note { color: rgba(255,255,255,0.45); }
 
-  /* Notes */
+  /* ── Notes ── */
   .notes-area {
     width: 100%; min-height: 100px;
     background: #fff; border: 1px solid var(--border);
@@ -349,7 +435,260 @@
   .notes-area::placeholder { color: #bbb; }
   .notes-area:focus { border-color: var(--sky); }
 
-  /* Buttons */
+  /* ── Packing panel ── */
+  .pack-header-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .pack-overall-progress {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 0.85rem; color: var(--muted);
+  }
+  .pack-overall-bar {
+    width: 160px; height: 6px; background: #e8e8e8;
+    border-radius: 100px; overflow: hidden;
+  }
+  .pack-overall-fill {
+    height: 100%; background: var(--lime);
+    border-radius: 100px; transition: width 0.4s ease;
+  }
+  .pack-category {
+    background: #fff; border-radius: 20px;
+    border: 1px solid var(--border); padding: 20px 24px;
+    margin-bottom: 14px; animation: slideUp 0.3s ease both;
+  }
+  .pack-cat-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+  }
+  .pack-cat-title { display: flex; align-items: center; gap: 10px; }
+  .pack-cat-emoji-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #f4f6f8; border: 1.5px dashed #ddd;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; cursor: pointer; transition: border-color 0.2s;
+    position: relative; flex-shrink: 0;
+  }
+  .pack-cat-emoji-btn:hover { border-color: var(--sky); }
+  .pack-cat-emoji-input {
+    position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
+    cursor: pointer; border: none; outline: none; background: none;
+  }
+  .pack-cat-name-input {
+    border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700;
+    color: var(--dark); width: 200px;
+  }
+  .pack-cat-name-input::placeholder { color: #bbb; font-weight: 400; }
+  .pack-cat-right { display: flex; align-items: center; gap: 10px; }
+  .pack-progress-text { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+  .pack-mini-bar {
+    width: 60px; height: 4px; background: #e8e8e8;
+    border-radius: 100px; overflow: hidden;
+  }
+  .pack-mini-fill {
+    height: 100%; background: var(--lime);
+    border-radius: 100px; transition: width 0.3s;
+  }
+  .pack-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .pack-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 2px;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .pack-item:last-child { border-bottom: none; }
+  .pack-checkbox {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 2px solid #ddd; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #fff; transition: all 0.15s; font-size: 0.7rem; color: transparent;
+  }
+  .pack-checkbox.checked { background: var(--lime); border-color: var(--lime); color: #fff; }
+  .pack-item-text {
+    flex: 1; background: none; border: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--dark);
+    transition: color 0.15s; padding: 2px 4px; border-radius: 4px;
+  }
+  .pack-item-text:focus { background: #f0f6fa; }
+  .pack-item-text::placeholder { color: #ccc; }
+  .pack-item.done .pack-item-text { color: var(--muted); text-decoration: line-through; }
+  .pack-item-del {
+    background: none; border: none; cursor: pointer;
+    font-size: 0.7rem; color: #ddd; padding: 2px 5px;
+    border-radius: 4px; transition: color 0.2s; opacity: 0;
+  }
+  .pack-item:hover .pack-item-del { opacity: 1; }
+  .pack-item-del:hover { color: var(--coral); }
+  .pack-add-item-btn {
+    background: none; border: 1.5px dashed #ddd;
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem; padding: 5px 14px; border-radius: 100px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .pack-add-item-btn:hover { border-color: var(--lime); color: var(--lime); }
+
+  /* ── People panel ── */
+  .people-grid { display: flex; flex-direction: column; gap: 12px; }
+  .person-card {
+    background: #fff; border-radius: 20px;
+    border: 1px solid var(--border); padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    animation: slideUp 0.3s ease both; position: relative;
+  }
+  .person-passport { flex-basis: 100%; width: 100%; margin-top: 4px; }
+  .person-passport summary { list-style: none; cursor: pointer; padding: 7px 14px; background: #f8fafc; border-radius: 12px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; transition: background 0.15s; }
+  .person-passport summary:hover { background: #eef3f8; }
+  .person-passport[open] summary { border-radius: 12px 12px 0 0; }
+  .person-passport .passport-body { padding: 12px 14px 14px; background: #f8fafc; border-radius: 0 0 12px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
+  .passport-field-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .passport-input { border: none; background: none; outline: none; border-bottom: 1.5px solid #e8ecf0; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--dark); width: 100%; padding: 2px 0; transition: border-color 0.15s; }
+  .passport-input:focus { border-bottom-color: var(--sky); }
+  .passport-input::placeholder { color: #ccc; font-size: 0.78rem; }
+  .person-card:hover .person-actions { opacity: 1; }
+  .person-emoji-wrap {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: #f4f6f8; display: flex; align-items: center;
+    justify-content: center; font-size: 1.6rem; flex-shrink: 0;
+    cursor: pointer; border: 1.5px dashed #ddd; position: relative;
+    transition: border-color 0.2s;
+  }
+  .person-emoji-wrap:hover { border-color: var(--sky); }
+  .person-emoji-input {
+    position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
+    cursor: pointer; border: none; outline: none; background: none;
+  }
+  .person-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .person-name-input {
+    border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--dark); width: 100%;
+  }
+  .person-name-input::placeholder { color: #bbb; font-weight: 400; }
+  .person-role-input {
+    border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    color: var(--muted); width: 100%;
+  }
+  .person-role-input::placeholder { color: #ccc; }
+  .person-email-input {
+    border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    color: var(--sky); width: 100%;
+  }
+  .person-email-input::placeholder { color: #ccc; }
+  .person-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .status-cycle-btn {
+    padding: 5px 14px; border-radius: 100px;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
+    cursor: pointer; border: none; font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .status-confirmed { background: #e8f7ef; color: #3a9e6d; }
+  .status-invited   { background: #e3f2fb; color: var(--sky); }
+  .status-maybe     { background: #fff8e0; color: #c4920e; }
+  .status-declined  { background: #fef0ee; color: var(--coral); }
+  .person-actions {
+    position: absolute; top: 10px; right: 10px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+
+  /* ── Confirmations panel ── */
+  .conf-grid { display: flex; flex-direction: column; gap: 14px; }
+  .conf-card {
+    background: #fff; border-radius: 20px;
+    border: 1px solid var(--border); padding: 20px 24px;
+    animation: slideUp 0.3s ease both; position: relative;
+    transition: box-shadow 0.2s;
+  }
+  .conf-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+  .conf-card:hover .conf-actions { opacity: 1; }
+  .conf-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px; }
+  .conf-emoji-wrap {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: #f4f6f8; display: flex; align-items: center;
+    justify-content: center; font-size: 1.4rem; flex-shrink: 0;
+    cursor: pointer; border: 1.5px dashed #ddd; position: relative;
+    transition: border-color 0.2s;
+  }
+  .conf-emoji-wrap:hover { border-color: var(--sky); }
+  .conf-emoji-input {
+    position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
+    cursor: pointer; border: none; outline: none; background: none;
+  }
+  .conf-main { flex: 1; }
+  .conf-title-input {
+    border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700;
+    color: var(--dark); width: 100%;
+  }
+  .conf-title-input::placeholder { color: #bbb; font-weight: 400; }
+  .conf-provider-input {
+    border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    color: var(--muted); width: 100%; margin-top: 2px;
+  }
+  .conf-provider-input::placeholder { color: #ccc; }
+  .conf-number-row {
+    display: flex; align-items: center; gap: 10px;
+    background: #f8fafc; border-radius: 10px; padding: 8px 14px;
+    margin-bottom: 8px;
+  }
+  .conf-num-label {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); flex-shrink: 0;
+  }
+  .conf-num-input {
+    flex: 1; border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    font-weight: 600; color: var(--dark); letter-spacing: 0.05em;
+  }
+  .conf-num-input::placeholder { color: #ccc; font-weight: 400; letter-spacing: 0; font-size: 0.82rem; }
+  .copy-btn {
+    background: var(--sky); color: #fff; border: none;
+    border-radius: 6px; padding: 3px 10px; font-size: 0.68rem;
+    font-weight: 600; cursor: pointer; transition: background 0.15s;
+    font-family: 'DM Sans', sans-serif; flex-shrink: 0;
+  }
+  .copy-btn:hover { background: var(--ocean); }
+  .copy-btn.copied { background: var(--lime); }
+  .conf-link-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .conf-link-input {
+    flex: 1; border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    color: var(--sky); border-bottom: 1.5px dashed transparent;
+    transition: border-color 0.15s; padding: 2px 4px;
+  }
+  .conf-link-input:focus { border-bottom-color: var(--wave); }
+  .conf-link-input::placeholder { color: #ccc; }
+  .conf-open-btn {
+    background: none; border: 1px solid var(--sky); color: var(--sky);
+    border-radius: 6px; padding: 3px 10px; font-size: 0.68rem;
+    font-weight: 600; cursor: pointer; text-decoration: none;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    display: none; flex-shrink: 0; white-space: nowrap;
+  }
+  .conf-open-btn.visible { display: inline-block; }
+  .conf-open-btn:hover { background: var(--sky); color: #fff; }
+  .conf-notes-input {
+    width: 100%; border: none; background: none; outline: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    color: var(--muted); resize: none; line-height: 1.6;
+    min-height: 40px;
+  }
+  .conf-notes-input::placeholder { color: #ddd; }
+  .conf-actions {
+    position: absolute; top: 10px; right: 10px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+
+  /* ── Panel section headings ── */
+  .panel-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; font-weight: 700; color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .panel-subheading { font-size: 0.83rem; color: var(--muted); margin-bottom: 24px; }
+
+  /* ── Buttons ── */
   .actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
   .btn {
     padding: 12px 24px; border-radius: 100px;
@@ -360,11 +699,24 @@
   .btn-primary:hover { background: var(--sky); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,122,154,0.3); }
   .btn-secondary { background: #fff; color: var(--dark); border: 1.5px solid #ddd; }
   .btn-secondary:hover { border-color: var(--sky); color: var(--sky); }
+  .btn-add {
+    background: none; border: 1.5px dashed #ccc; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+    padding: 10px 24px; border-radius: 100px; cursor: pointer;
+    transition: all 0.2s; margin-top: 4px;
+  }
+  .btn-add:hover { border-color: var(--sky); color: var(--sky); background: rgba(26,122,154,0.04); }
+  .btn-icon-only {
+    background: none; border: none; cursor: pointer; padding: 2px 6px;
+    border-radius: 4px; font-size: 0.8rem; color: #ccc; transition: color 0.2s;
+  }
+  .btn-icon-only:hover { color: var(--coral); }
 
+  /* ── Footer ── */
   .footer { text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px solid #eee; color: var(--muted); font-size: 0.82rem; }
   .footer .emoji-row { font-size: 1.5rem; margin-bottom: 8px; letter-spacing: 0.3em; }
 
-  /* Save indicator */
+  /* ── Save indicator ── */
   #save-indicator {
     position: fixed; bottom: 24px; right: 24px;
     background: var(--lime); color: #fff;
@@ -377,17 +729,21 @@
   }
   #save-indicator.visible { opacity: 1; transform: translateY(0); }
 
-  @media (max-width: 600px) {
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
     .hero { padding: 40px 20px 100px; }
     .total-card { padding: 24px; }
     .total-meta { align-items: flex-start; }
     .meta-field { width: 160px; }
-    .tab-btn { font-size: 0.82rem; padding: 9px 16px; }
+    .tab-btn { font-size: 0.8rem; padding: 8px 14px; }
+    .weather-widget { width: 100%; }
+    .leg-pill { min-width: 160px; }
   }
 </style>
 </head>
 <body>
 
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
 <div class="hero">
   <div class="wave-bg"></div>
   <div class="floating-emojis">
@@ -399,94 +755,192 @@
     <span class="float-item">🎬</span>
   </div>
   <div class="hero-content">
-    <div class="trip-badge">Trip Budget Planner</div>
-    <h1>Your Trip<br><span>Budget</span></h1>
+    <div class="trip-badge">Trip Planner</div>
+    <h1>Your Trip<br><span>Adventure</span></h1>
     <div class="hero-edit">
-      <input class="hero-field" id="tripName"      type="text" placeholder="Trip name (e.g. Florida 2025)" />
+      <input class="hero-field" id="tripName"      type="text" placeholder="Trip name (e.g. Florida 2026)" />
       <input class="hero-field" id="tripDates"     type="text" placeholder="Dates (e.g. May 23 – June 5)" />
       <input class="hero-field" id="tripTravelers" type="text" placeholder="Who's going?" />
     </div>
+
+    <!-- Countdown -->
+    <div class="countdown-wrap" id="countdownWrap">
+      <div class="countdown-unit"><div class="countdown-num" id="cdDays">--</div><div class="countdown-label">Days</div></div>
+      <div class="countdown-unit"><div class="countdown-num" id="cdHours">--</div><div class="countdown-label">Hours</div></div>
+      <div class="countdown-unit"><div class="countdown-num" id="cdMins">--</div><div class="countdown-label">Minutes</div></div>
+      <div class="countdown-unit"><div class="countdown-num" id="cdSecs">--</div><div class="countdown-label">Seconds</div></div>
+    </div>
+    <div class="countdown-msg" id="countdownMsg"></div>
+
+    <!-- Trip Legs -->
+    <div class="legs-wrap" id="legsContainer"></div>
+    <button class="add-leg-btn" onclick="addLeg()" style="margin-top:10px;">+ Add Leg</button>
   </div>
 </div>
 
+<!-- ═══════════════════════ MAIN CONTENT ═══════════════════════ -->
 <div class="container">
 
-  <div class="total-card">
-    <div>
-      <div class="total-label">Total Cost</div>
-      <div class="total-amount" id="grandTotal">$0</div>
-      <div class="total-note">CAD · all tabs combined</div>
+  <!-- Top row: Total Card + Weather -->
+  <div class="dashboard-top">
+
+    <div class="total-card">
+      <div>
+        <div class="total-label">Total Cost</div>
+        <div class="total-amount" id="grandTotal">$0</div>
+        <div class="total-note">CAD · all tabs combined</div>
+      </div>
+      <div class="total-meta">
+        <input class="meta-field" type="text" placeholder="✈️ e.g. Direct flight YQB→MCO" />
+        <input class="meta-field" type="text" placeholder="🏨 e.g. 3 nights I-Drive" />
+        <input class="meta-field" type="text" placeholder="🎉 e.g. 9 free nights w/ family" />
+      </div>
     </div>
-    <div class="total-meta">
-      <input class="meta-field" type="text" placeholder="✈️ e.g. Direct flight YQB→MCO" />
-      <input class="meta-field" type="text" placeholder="🏨 e.g. 3 nights I-Drive" />
-      <input class="meta-field" type="text" placeholder="🎉 e.g. 9 free nights w/ family" />
+
+    <div class="weather-widget">
+      <div class="weather-title">☀️ Orlando Weather</div>
+      <div class="weather-subtitle" id="weatherSubtitle">May 23 – June 5 · Typical Climate</div>
+      <div class="weather-grid">
+        <div class="w-stat">
+          <div class="w-label">Daily High</div>
+          <div class="w-value">91°F</div>
+          <div class="w-sub">33°C</div>
+        </div>
+        <div class="w-stat">
+          <div class="w-label">Daily Low</div>
+          <div class="w-value">74°F</div>
+          <div class="w-sub">23°C</div>
+        </div>
+        <div class="w-stat">
+          <div class="w-label">Humidity</div>
+          <div class="w-value">76%</div>
+          <div class="w-sub">Very humid</div>
+        </div>
+        <div class="w-stat">
+          <div class="w-label">UV Index</div>
+          <div class="w-value">Very High</div>
+          <div class="w-sub">SPF 50+ required</div>
+        </div>
+      </div>
+      <div class="weather-note">☔ Rainy season begins June 1 — afternoon thunderstorms common. Mornings are typically clear and sunny.</div>
     </div>
   </div>
 
-  <!-- Tab bar -->
-  <div class="tab-bar">
-    <button class="tab-btn active" data-tab="0" onclick="switchTab(0)">
-      ✈️ Bookings <span class="tab-amount" id="tab0Total"></span>
+  <!-- ─── Tab Bar (5 tabs) ─── -->
+  <div class="tab-bar" id="mainTabBar">
+    <button class="tab-btn active" data-nav="0" onclick="switchNavTab(0)">
+      ✈️ Bookings <span class="tab-badge" id="tab0Badge"></span>
     </button>
-    <button class="tab-btn" data-tab="1" onclick="switchTab(1)">
-      🍽️ Food &amp; Fun <span class="tab-amount" id="tab1Total"></span>
+    <button class="tab-btn" data-nav="1" onclick="switchNavTab(1)">
+      🍽️ Food &amp; Fun <span class="tab-badge" id="tab1Badge"></span>
+    </button>
+    <button class="tab-btn" data-nav="2" onclick="switchNavTab(2)">
+      🧳 Packing <span class="tab-badge" id="packBadge"></span>
+    </button>
+    <button class="tab-btn" data-nav="3" onclick="switchNavTab(3)">
+      👥 People <span class="tab-badge" id="peopleBadge"></span>
+    </button>
+    <button class="tab-btn" data-nav="4" onclick="switchNavTab(4)">
+      📋 Confirmations <span class="tab-badge" id="confBadge"></span>
     </button>
   </div>
 
-  <div id="sections-container" data-active-tab="0"></div>
+  <!-- ─────────────────── BUDGET PANEL (tabs 0 & 1) ─────────────────── -->
+  <div id="budgetPanel">
+    <div id="sections-container" data-budget-tab="0"></div>
 
-  <div style="margin-top:24px;text-align:center;">
-    <button class="add-row-btn" style="font-size:0.85rem;padding:9px 22px;" onclick="addSection()">+ Add Category</button>
-  </div>
+    <div style="margin-top:24px;text-align:center;">
+      <button class="btn-add" onclick="addSection()">+ Add Category</button>
+    </div>
 
-  <!-- Summary -->
-  <div class="summary-section">
-    <div class="summary-title">📊 Summary</div>
-    <div class="summary-wrap">
-      <table class="summary-table">
-        <thead>
-          <tr>
-            <td class="s-name" style="color:var(--muted);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Category</td>
-            <td class="s-amount" style="color:var(--muted);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;font-family:'DM Sans',sans-serif;">Amount (CAD)</td>
-          </tr>
-        </thead>
-        <tbody id="summaryBody">
-          <tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>
-        </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td class="s-name">TOTAL</td>
-            <td class="s-amount" id="summaryTotal">$0</td>
-          </tr>
-        </tfoot>
-      </table>
+    <!-- Summary -->
+    <div class="summary-section">
+      <div class="summary-title">📊 Summary</div>
+      <div class="summary-wrap">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <td class="s-name" style="color:var(--muted);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">Category</td>
+              <td class="s-amount" style="color:var(--muted);font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;font-family:'DM Sans',sans-serif;">Amount (CAD)</td>
+            </tr>
+          </thead>
+          <tbody id="summaryBody">
+            <tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td class="s-name">TOTAL</td>
+              <td class="s-amount" id="summaryTotal">$0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Per person -->
+    <div class="section-header" style="margin-top:36px;">
+      <div class="section-label">👤 Per Person</div>
+    </div>
+    <div class="pp-wrap">
+      <div class="pp-card">
+        <div class="pp-card-label">Number of people</div>
+        <input type="number" id="numPeople" min="1" value="2" oninput="recalculate()"
+          style="width:60px;border:1px solid #eee;border-radius:8px;padding:6px 10px;font-size:1rem;outline:none;font-family:'DM Sans',sans-serif;font-weight:600;color:var(--dark);margin-top:4px;" />
+        <div class="pp-card-note" style="margin-top:6px;">people splitting the cost</div>
+      </div>
+      <div class="pp-card highlight">
+        <div class="pp-card-label">Cost per person</div>
+        <div class="pp-card-amount" id="ppAmount">$0</div>
+        <div class="pp-card-note">CAD</div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="section-header" style="margin-top:36px;">
+      <div class="section-label">📝 Notes &amp; Reminders</div>
+    </div>
+    <textarea class="notes-area" placeholder="e.g. Book Air Transat flights ASAP · Use Undercover Tourist for park tickets · Return car at DAB on May 28..."></textarea>
+  </div><!-- /budgetPanel -->
+
+  <!-- ─────────────────── PACKING PANEL (tab 2) ─────────────────── -->
+  <div id="packingPanel" style="display:none">
+    <div class="pack-header-row">
+      <div>
+        <div class="panel-heading">🧳 Packing List</div>
+        <div class="panel-subheading">Check items as you pack — progress saves automatically.</div>
+      </div>
+      <div class="pack-overall-progress">
+        <span id="packProgressText">0 / 0 packed</span>
+        <div class="pack-overall-bar">
+          <div class="pack-overall-fill" id="packOverallFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+    <div id="packCatsContainer"></div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn-add" onclick="addPackCategory()">+ Add Category</button>
     </div>
   </div>
 
-  <!-- Per person -->
-  <div class="section-header" style="margin-top:36px;">
-    <div class="section-label">👤 Per Person</div>
-  </div>
-  <div class="pp-wrap">
-    <div class="pp-card">
-      <div class="pp-card-label">Number of people</div>
-      <input type="number" id="numPeople" min="1" value="2" oninput="recalculate()"
-        style="width:60px;border:1px solid #eee;border-radius:8px;padding:6px 10px;font-size:1rem;outline:none;font-family:'DM Sans',sans-serif;font-weight:600;color:var(--dark);margin-top:4px;" />
-      <div class="pp-card-note" style="margin-top:6px;">people splitting the cost</div>
-    </div>
-    <div class="pp-card highlight">
-      <div class="pp-card-label">Cost per person</div>
-      <div class="pp-card-amount" id="ppAmount">$0</div>
-      <div class="pp-card-note">CAD</div>
+  <!-- ─────────────────── PEOPLE PANEL (tab 3) ─────────────────── -->
+  <div id="peoplePanel" style="display:none">
+    <div class="panel-heading">👥 Travelers &amp; Invites</div>
+    <div class="panel-subheading">Track who's coming. Click the status badge to cycle through RSVP states.</div>
+    <div class="people-grid" id="peopleContainer"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn-add" onclick="addPerson()">+ Add Person</button>
     </div>
   </div>
 
-  <!-- Notes -->
-  <div class="section-header" style="margin-top:36px;">
-    <div class="section-label">📝 Notes &amp; Reminders</div>
+  <!-- ─────────────────── CONFIRMATIONS PANEL (tab 4) ─────────────────── -->
+  <div id="confirmationsPanel" style="display:none">
+    <div class="panel-heading">📋 Booking Confirmations</div>
+    <div class="panel-subheading">Paste your confirmation numbers here — no more digging through emails.</div>
+    <div class="conf-grid" id="confContainer"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn-add" onclick="addConfirmation()">+ Add Confirmation</button>
+    </div>
   </div>
-  <textarea class="notes-area" placeholder="e.g. Book Air Transat flights ASAP · Use Undercover Tourist for park tickets · Return car at DAB on May 28 · Family drives to MCO on June 5..."></textarea>
 
   <div class="actions">
     <button class="btn btn-primary"   onclick="window.print()">🖨️ Print / Save as PDF</button>
@@ -495,485 +949,1020 @@
 
   <div class="footer">
     <div class="emoji-row">🌴 ✈️ 🎢 🌊 🎬 🏖️</div>
-    <p>Trip Budget Planner · Fill in your own numbers!</p>
+    <p>Trip Planner · All data saved in your browser</p>
   </div>
 </div>
 
 <div id="save-indicator">✓ Saved</div>
 
 <script>
-  // --- State ---
-  let sections = [];
-  let sectionById = new Map();
-  let sectionCounter = 0, rowCounter = 0;
-  let activeTab = 0; // 0 = Bookings, 1 = Food & Fun
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let sections = [], sectionById = new Map(), sectionCounter = 0, rowCounter = 0;
+let navTab = 0; // 0=Bookings, 1=Food&Fun, 2=Packing, 3=People, 4=Confirmations
 
-  // Cached DOM refs
-  let elGrandTotal, elSummaryTotal, elNumPeople, elPpAmount, elSummaryBody, elSectionsContainer;
+// Packing
+let packCats = [], packCatCounter = 0, packItemCounter = 0;
+// People
+let people = [], personCounter = 0;
+// Confirmations
+let confirmations = [], confCounter = 0;
+// Legs
+let legs = [], legCounter = 0;
 
-  // --- Debounced recalculate ---
-  let recalcTimer = null;
-  function scheduleRecalc() {
-    clearTimeout(recalcTimer);
-    recalcTimer = setTimeout(recalculate, 30);
+// Cached DOM refs
+let elGrandTotal, elSummaryTotal, elNumPeople, elPpAmount, elSummaryBody, elSectionsContainer;
+
+// Debounced recalculate
+let recalcTimer = null;
+function scheduleRecalc() { clearTimeout(recalcTimer); recalcTimer = setTimeout(recalculate, 30); }
+
+const STORAGE_KEY = 'florida_trip_budget_v3';
+
+// ═══════════════════════════════════════════════════════
+//  NAV TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+function switchNavTab(n) {
+  navTab = n;
+  // Update active class
+  document.querySelectorAll('#mainTabBar .tab-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.nav) === n);
+  });
+  // Show/hide panels
+  document.getElementById('budgetPanel').style.display       = (n === 0 || n === 1) ? '' : 'none';
+  document.getElementById('packingPanel').style.display      = n === 2 ? '' : 'none';
+  document.getElementById('peoplePanel').style.display       = n === 3 ? '' : 'none';
+  document.getElementById('confirmationsPanel').style.display = n === 4 ? '' : 'none';
+  // If budget tab, filter sections
+  if (n === 0 || n === 1) {
+    elSectionsContainer.dataset.budgetTab = String(n);
+    updateSectionVisibility(n);
   }
+  saveToStorage();
+}
 
-  // --- Tab switching ---
-  function switchTab(tab) {
-    activeTab = tab;
-    elSectionsContainer.dataset.activeTab = String(tab);
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.toggle('active', parseInt(btn.dataset.tab) === tab);
-    });
-    saveToStorage();
-  }
+function updateSectionVisibility(budgetTab) {
+  document.querySelectorAll('#sections-container .section-wrapper').forEach(w => {
+    w.style.display = (parseInt(w.dataset.sectionTab) === budgetTab) ? '' : 'none';
+  });
+}
 
-  // --- localStorage persistence (v2 adds tab support) ---
-  const STORAGE_KEY = 'florida_trip_budget_v1';
+// ═══════════════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════════════
+function saveToStorage() {
+  try {
+    const data = {
+      v: 3, sectionCounter, rowCounter, navTab,
+      packCatCounter, packItemCounter, personCounter, confCounter, legCounter,
+      sections: sections.map(s => ({
+        id: s.id, name: s.name, tab: s.tab || 0,
+        rows: s.rows.map(r => ({
+          id: r.id, emoji: r.emoji, name: r.name,
+          detail: r.detail, link: r.link, amount: r.amount, hidden: r.hidden
+        }))
+      })),
+      packCats: packCats.map(c => ({
+        id: c.id, emoji: c.emoji, name: c.name,
+        items: c.items.map(i => ({ id: i.id, text: i.text, checked: i.checked }))
+      })),
+      people: people.map(p => ({
+        id: p.id, emoji: p.emoji, name: p.name,
+        role: p.role, email: p.email, status: p.status,
+        passportNum: p.passportNum, passportCountry: p.passportCountry,
+        passportExpiry: p.passportExpiry, passportIssued: p.passportIssued
+      })),
+      confirmations: confirmations.map(c => ({
+        id: c.id, emoji: c.emoji, title: c.title,
+        provider: c.provider, number: c.number, link: c.link, notes: c.notes
+      })),
+      legs: legs.map(l => ({
+        id: l.id, name: l.name, from: l.from, to: l.to,
+        dateFrom: l.dateFrom, dateTo: l.dateTo
+      })),
+      tripName:      document.getElementById('tripName').value,
+      tripDates:     document.getElementById('tripDates').value,
+      tripTravelers: document.getElementById('tripTravelers').value,
+      meta:          Array.from(document.querySelectorAll('.meta-field')).map(f => f.value),
+      notes:         document.querySelector('.notes-area')?.value || '',
+      numPeople:     elNumPeople ? elNumPeople.value : '2'
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    showSaved();
+  } catch(e) {}
+}
 
-  function saveToStorage() {
-    try {
-      const data = {
-        v: 2,
-        sectionCounter,
-        rowCounter,
-        activeTab,
-        sections: sections.map(s => ({
-          id: s.id, name: s.name, tab: s.tab || 0,
-          rows: s.rows.map(r => ({
-            id: r.id, emoji: r.emoji, name: r.name,
-            detail: r.detail, link: r.link, amount: r.amount, hidden: r.hidden
-          }))
-        })),
-        tripName:      document.getElementById('tripName').value,
-        tripDates:     document.getElementById('tripDates').value,
-        tripTravelers: document.getElementById('tripTravelers').value,
-        meta:          Array.from(document.querySelectorAll('.meta-field')).map(f => f.value),
-        notes:         document.querySelector('.notes-area').value,
-        numPeople:     elNumPeople ? elNumPeople.value : '2'
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      showSaved();
-    } catch(e) {}
-  }
-
-  function loadFromStorage() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      let data = JSON.parse(raw);
-      if (!data) return null;
-
-      // Migrate v1 → v2: assign tab based on section name
-      if (data.v === 1) {
-        data.sections = (data.sections || []).map(s => ({
-          ...s,
-          tab: /food|activities|fun|extra/i.test(s.name) ? 1 : 0
-        }));
-        data.v = 2;
-        data.activeTab = 0;
-      }
-
-      if (data.v !== 2) return null;
-
-      sectionCounter = data.sectionCounter || 0;
-      rowCounter     = data.rowCounter || 0;
-      activeTab      = typeof data.activeTab === 'number' ? data.activeTab : 0;
-      sections = [];
-      sectionById.clear();
-      (data.sections || []).forEach(s => {
-        const section = { id: s.id, name: s.name || '', tab: s.tab || 0, rows: [], rowById: new Map() };
-        (s.rows || []).forEach(r => {
-          const row = {
-            id: r.id, emoji: r.emoji || '✏️', name: r.name || '',
-            detail: r.detail || '', link: r.link || '', amount: r.amount || '', hidden: !!r.hidden
-          };
-          section.rows.push(row);
-          section.rowById.set(row.id, row);
-        });
-        sections.push(section);
-        sectionById.set(section.id, section);
-      });
-      return data;
-    } catch(e) { return null; }
-  }
-
-  // Save indicator toast
-  let savedTimer = null;
-  function showSaved() {
-    const el = document.getElementById('save-indicator');
-    if (!el) return;
-    el.classList.add('visible');
-    clearTimeout(savedTimer);
-    savedTimer = setTimeout(() => el.classList.remove('visible'), 1800);
-  }
-
-  // --- Data helpers ---
-  function newRow() {
-    return { id: rowCounter++, emoji: '✏️', name: '', detail: '', link: '', amount: '', hidden: false };
-  }
-
-  // --- Section operations (incremental DOM updates) ---
-  function addSection(name = '') {
-    const section = { id: sectionCounter++, name, tab: activeTab, rows: [], rowById: new Map() };
-    sections.push(section);
-    sectionById.set(section.id, section);
-    const row = newRow();
-    section.rows.push(row);
-    section.rowById.set(row.id, row);
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'section-wrapper';
-    wrapper.dataset.sectionId = section.id;
-    wrapper.dataset.sectionTab = section.tab;
-    wrapper.innerHTML = sectionHTML(section);
-    elSectionsContainer.appendChild(wrapper);
-    recalculate();
-    saveToStorage();
-  }
-
-  function removeSection(id) {
-    const idx = sections.findIndex(s => s.id === id);
-    if (idx === -1) return;
-    sections.splice(idx, 1);
-    sectionById.delete(id);
-    elSectionsContainer.querySelector(`.section-wrapper[data-section-id="${id}"]`)?.remove();
-    recalculate();
-    saveToStorage();
-  }
-
-  function addRow(sectionId) {
-    const section = sectionById.get(sectionId);
-    if (!section) return;
-    const row = newRow();
-    section.rows.push(row);
-    section.rowById.set(row.id, row);
-    const grid = elSectionsContainer.querySelector(`.budget-grid[data-section-id="${sectionId}"]`);
-    if (grid) grid.insertAdjacentHTML('beforeend', rowHTML(sectionId, row));
-    recalculate();
-    saveToStorage();
-  }
-
-  function removeRow(sectionId, rowId) {
-    const section = sectionById.get(sectionId);
-    if (!section) return;
-    const idx = section.rows.findIndex(r => r.id === rowId);
-    if (idx === -1) return;
-    section.rows.splice(idx, 1);
-    section.rowById.delete(rowId);
-    elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`)?.remove();
-    recalculate();
-    saveToStorage();
-  }
-
-  function toggleHide(sectionId, rowId) {
-    const section = sectionById.get(sectionId);
-    if (!section) return;
-    const row = section.rowById.get(rowId);
-    if (!row) return;
-    row.hidden = !row.hidden;
-    const rowEl = elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`);
-    if (rowEl) {
-      rowEl.classList.toggle('hidden-row', row.hidden);
-      const hideBtn = rowEl.querySelector(`[data-row-hide="${rowId}"]`);
-      if (hideBtn) {
-        hideBtn.classList.toggle('active', row.hidden);
-        hideBtn.title = row.hidden ? 'Show item' : 'Hide item';
-        hideBtn.textContent = row.hidden ? '👁️' : '🙈';
-      }
+function loadFromStorage() {
+  try {
+    // Try v3 first
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // Try migrating from v2
+      raw = localStorage.getItem('florida_trip_budget_v1');
     }
-    scheduleRecalc();
-    saveToStorage();
-  }
+    if (!raw) return null;
+    let data = JSON.parse(raw);
+    if (!data) return null;
 
-  // --- HTML builders ---
-  function sectionHTML(section) {
-    return `
-      <div class="section-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);">Category</span>
-          <input class="section-name-input" type="text"
-            placeholder="e.g. Flights, Hotels, Parks..."
-            value="${escHtml(section.name)}" data-sid="${section.id}"
-            style="border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:var(--dark);letter-spacing:0.05em;width:220px;" />
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button class="add-row-btn" data-sid="${section.id}">+ Add Item</button>
-          <button class="delete-btn" style="opacity:1;position:static;" data-sid-del="${section.id}">✕ Remove</button>
-        </div>
-      </div>
-      <div class="budget-grid" data-section-id="${section.id}">${section.rows.map(r => rowHTML(section.id, r)).join('')}</div>
-    `;
-  }
+    // Migrate v1/v2 → v3
+    if (data.v === 1 || data.v === 2) {
+      data.sections = (data.sections || []).map(s => ({
+        ...s, tab: s.tab ?? (/food|activities|fun|extra/i.test(s.name) ? 1 : 0)
+      }));
+      data.packCats = []; data.people = []; data.confirmations = []; data.legs = [];
+      data.navTab = 0;
+      data.v = 3;
+    }
 
-  function rowHTML(sectionId, row) {
-    return `
-      <div class="budget-row ${row.hidden ? 'hidden-row' : ''}" data-row-id="${row.id}" data-sid="${sectionId}">
-        <div class="row-icon-picker" title="Click to change emoji">
-          <span class="emoji-display">${row.emoji}</span>
-          <input class="emoji-input" type="text" maxlength="2" value="${row.emoji}"
-            data-emoji-row="${row.id}" data-sid="${sectionId}" />
-        </div>
-        <div class="row-info">
-          <input class="row-name-input" type="text"
-            placeholder="Item name (e.g. YQB → MCO flights)"
-            value="${escHtml(row.name)}" data-field="name" data-row="${row.id}" data-sid="${sectionId}" />
-          <input class="row-detail-input" type="text"
-            placeholder="Details (e.g. Air Transat, direct, book ASAP)"
-            value="${escHtml(row.detail)}" data-field="detail" data-row="${row.id}" data-sid="${sectionId}" />
-          <div class="row-link-wrap">
-            <span class="link-icon">🔗</span>
-            <input class="row-link-input" type="url" placeholder="Paste a link (optional)"
-              value="${escHtml(row.link)}" data-field="link" data-row="${row.id}" data-sid="${sectionId}" />
-            <a class="link-go-btn ${row.link ? 'visible' : ''}" href="${escHtml(row.link)}"
-              target="_blank" rel="noopener" data-link-btn="${row.id}">Open ↗</a>
-          </div>
-        </div>
-        <div class="row-amount-wrap">
-          <span class="currency-tag">$ CAD</span>
-          <input class="amount-input" type="number" placeholder="0.00"
-            value="${row.amount}" data-field="amount" data-row="${row.id}" data-sid="${sectionId}" />
-        </div>
-        <div class="row-actions">
-          <button class="hide-btn ${row.hidden ? 'active' : ''}" title="${row.hidden ? 'Show item' : 'Hide item'}" data-row-hide="${row.id}" data-sid="${sectionId}">${row.hidden ? '👁️' : '🙈'}</button>
-          <button class="delete-btn" title="Remove item" data-row-del="${row.id}" data-sid="${sectionId}">✕</button>
-        </div>
-      </div>
-    `;
-  }
+    if (data.v !== 3) return null;
 
-  // --- Full render (initial load + clearAll only) ---
-  function renderAll() {
-    elSectionsContainer.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    sections.forEach(section => {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'section-wrapper';
-      wrapper.dataset.sectionId = section.id;
-      wrapper.dataset.sectionTab = section.tab || 0;
-      wrapper.innerHTML = sectionHTML(section);
-      frag.appendChild(wrapper);
-    });
-    elSectionsContainer.appendChild(frag);
-    recalculate();
-  }
+    sectionCounter  = data.sectionCounter  || 0;
+    rowCounter      = data.rowCounter      || 0;
+    navTab          = typeof data.navTab === 'number' ? data.navTab : 0;
+    packCatCounter  = data.packCatCounter  || 0;
+    packItemCounter = data.packItemCounter || 0;
+    personCounter   = data.personCounter   || 0;
+    confCounter     = data.confCounter     || 0;
+    legCounter      = data.legCounter      || 0;
 
-  // --- Event delegation ---
-  function initEventDelegation() {
-    elSectionsContainer.addEventListener('click', e => {
-      const btn = e.target.closest('button');
-      if (!btn) return;
-      const sid = btn.dataset.sid !== undefined ? parseInt(btn.dataset.sid) : NaN;
-      if (btn.dataset.sidDel !== undefined) {
-        removeSection(parseInt(btn.dataset.sidDel));
-      } else if (btn.dataset.rowHide !== undefined) {
-        toggleHide(sid, parseInt(btn.dataset.rowHide));
-      } else if (btn.dataset.rowDel !== undefined) {
-        removeRow(sid, parseInt(btn.dataset.rowDel));
-      } else if (btn.classList.contains('add-row-btn') && !isNaN(sid)) {
-        addRow(sid);
-      }
-    });
-
-    elSectionsContainer.addEventListener('input', e => {
-      const el = e.target;
-      if (el.classList.contains('section-name-input')) {
-        const s = sectionById.get(parseInt(el.dataset.sid));
-        if (s) s.name = el.value;
-        scheduleRecalc();
-        saveToStorage();
-      } else if (el.dataset.field !== undefined && el.dataset.row !== undefined) {
-        const section = sectionById.get(parseInt(el.dataset.sid));
-        if (!section) return;
-        const row = section.rowById.get(parseInt(el.dataset.row));
-        if (!row) return;
-        row[el.dataset.field] = el.value;
-        if (el.dataset.field === 'link') {
-          const linkBtn = elSectionsContainer.querySelector(`[data-link-btn="${el.dataset.row}"]`);
-          if (linkBtn) { const v = el.value.trim(); linkBtn.href = v; linkBtn.classList.toggle('visible', v.length > 0); }
-        }
-        scheduleRecalc();
-        saveToStorage();
-      } else if (el.classList.contains('emoji-input')) {
-        const val = el.value.trim() || '✏️';
-        const section = sectionById.get(parseInt(el.dataset.sid));
-        if (!section) return;
-        const row = section.rowById.get(parseInt(el.dataset.emojiRow));
-        if (!row) return;
-        row.emoji = val;
-        const d = el.parentElement.querySelector('.emoji-display');
-        if (d) d.textContent = val;
-        saveToStorage();
-      }
-    });
-  }
-
-  // --- Recalculate (both tabs always included in grand total) ---
-  function recalculate() {
-    let grandTotal = 0;
-    const tabTotals = [0, 0];
-    const tabRows   = [[], []];
-
-    sections.forEach(section => {
-      let sTotal = 0;
-      section.rows.forEach(row => { if (!row.hidden) sTotal += parseFloat(row.amount) || 0; });
-      grandTotal += sTotal;
-      const t = section.tab || 0;
-      tabTotals[t] += sTotal;
-      if (section.name || sTotal) tabRows[t].push({ name: section.name || 'Unnamed', amount: sTotal });
-    });
-
-    // Grand total card
-    const formatted = '$' + fmt(grandTotal);
-    elGrandTotal.textContent = formatted;
-    elSummaryTotal.textContent = formatted;
-
-    // Per person
-    const people = parseInt(elNumPeople.value) || 1;
-    elPpAmount.textContent = '$' + fmt(grandTotal / people);
-
-    // Tab button amounts
-    const TAB_LABELS = ['✈️ Bookings', '🍽️ Food & Fun'];
-    [0, 1].forEach(t => {
-      const el = document.getElementById(`tab${t}Total`);
-      if (el) el.textContent = tabTotals[t] ? '$' + fmt(tabTotals[t]) : '';
-    });
-
-    // Summary table: grouped by tab with subtotals
-    let html = '';
-    let hasAny = false;
-    [0, 1].forEach(t => {
-      if (!tabRows[t].length) return;
-      hasAny = true;
-      html += `<tr class="summary-tab-header"><td colspan="2">${TAB_LABELS[t]}</td></tr>`;
-      html += tabRows[t].map(r =>
-        `<tr><td class="s-name" style="padding-left:28px;">${escHtml(r.name)}</td><td class="s-amount">$${fmt(r.amount)}</td></tr>`
-      ).join('');
-      html += `<tr class="summary-subtotal"><td class="s-name">Subtotal</td><td class="s-amount">$${fmt(tabTotals[t])}</td></tr>`;
-    });
-
-    elSummaryBody.innerHTML = hasAny
-      ? html
-      : '<tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see your summary</td></tr>';
-  }
-
-  function fmt(n) { return Math.round(n).toLocaleString(); }
-
-  function escHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function clearAll() {
-    if (!confirm('Clear everything and start fresh?')) return;
-    sections = []; sectionById.clear(); sectionCounter = 0; rowCounter = 0;
-    activeTab = 0;
-    ['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).value = '');
-    document.querySelectorAll('.meta-field').forEach(f => f.value = '');
-    document.querySelector('.notes-area').value = '';
-    localStorage.removeItem(STORAGE_KEY);
-    elSectionsContainer.dataset.activeTab = '0';
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === '0');
-    });
-    renderAll();
-  }
-
-  // --- Default data ---
-  function initDefaultData() {
-    const raw = [
-      {
-        name: 'Flights', tab: 0,
-        rows: [
-          { emoji: '✏️', name: 'YUL to MCO - MCO to YUL', detail: '✈️ AC 1636 · May 23 15:10→18:31 non-stop (3h21m) · ✈️ AC 1641 · Jun 5 19:30→22:46 non-stop (3h16m) · Air Canada Rouge · Economy Standard · 2 Adults', link: 'https://www.aircanada.com/booking/ca/en/aco/review-trip', amount: '1566.36', hidden: false }
-        ]
-      },
-      {
-        name: 'Ground Transport', tab: 0,
-        rows: [
-          { emoji: '✏️', name: 'Economy car', detail: '', link: 'https://www.expedia.ca/carsearch/details?selCC=%5Bmini%2Ceconomy%2Ccompact%5D&date1=23%2F05%2', amount: '269.39', hidden: false },
-          { emoji: '✏️', name: 'Train SAINTE-FOY To MONTREAL - CENTRAL STATION', detail: 'Via Rail · May 23, 2026 SAINTE-FOY to DORVAL, Train #35 · Dep. 8:34 · Jun 6, 2026 DORVAL to SAINTE-FOY', link: 'https://reservia.viarail.ca/en/booking/create/trip/2?type=roundTrip&ADT=2&travels=SFOY_MTRL_2026-05-23', amount: '197.76', hidden: false }
-        ]
-      },
-      {
-        name: 'Accommodation', tab: 0,
-        rows: [
-          { emoji: '✏️', name: 'B&B Hotel Orlando International Drive Near Universal', detail: '', link: 'https://www.expedia.ca/Hotel-Search?regionId=5194573&destination=Orlando%2C%20FL%2C%20United%20States', amount: '461.21', hidden: true },
-          { emoji: '✏️', name: 'Cozy hotel room in Developer Inn Express Resort', detail: '', link: 'https://www.expedia.ca/Orlando-Hotels-Impeccably-Cozy-Hotel-Room-Developer-Inn-Express.h102600599.Hotel', amount: '363.68', hidden: false }
-        ]
-      },
-      {
-        name: 'Theme Parks', tab: 0,
-        rows: [
-          { emoji: '✏️', name: 'Universal 2-Park Express Pass', detail: '1 day pass', link: 'https://www.undercovertourist.com/cart/', amount: '518.94', hidden: true },
-          { emoji: '✏️', name: '2-Day Universal Express Pass (including Universal Epic Universe)', detail: '', link: 'https://www.undercovertourist.com/orlando/universal-orlando-resort/', amount: '579.64', hidden: false }
-        ]
-      },
-      {
-        name: 'Food & Extras', tab: 1,
-        rows: [
-          { emoji: '✏️', name: 'Food & Activities', detail: '', link: '', amount: '770', hidden: true },
-          { emoji: '✏️', name: 'Rainbow inner tubing', detail: '', link: 'https://visitrainbowsprings.com/tubing/', amount: '30.00', hidden: true }
-        ]
-      }
-    ];
-
-    raw.forEach(s => {
-      const section = { id: sectionCounter++, name: s.name, tab: s.tab, rows: [], rowById: new Map() };
-      sections.push(section);
-      sectionById.set(section.id, section);
-      s.rows.forEach(r => {
-        const row = { id: rowCounter++, ...r };
-        section.rows.push(row);
-        section.rowById.set(row.id, row);
+    sections = []; sectionById.clear();
+    (data.sections || []).forEach(s => {
+      const section = { id: s.id, name: s.name || '', tab: s.tab || 0, rows: [], rowById: new Map() };
+      (s.rows || []).forEach(r => {
+        const row = { id: r.id, emoji: r.emoji || '✏️', name: r.name || '', detail: r.detail || '', link: r.link || '', amount: r.amount || '', hidden: !!r.hidden };
+        section.rows.push(row); section.rowById.set(row.id, row);
       });
+      sections.push(section); sectionById.set(section.id, section);
     });
+
+    packCats = (data.packCats || []).map(c => ({
+      id: c.id, emoji: c.emoji || '📦', name: c.name || '',
+      items: (c.items || []).map(i => ({ id: i.id, text: i.text || '', checked: !!i.checked }))
+    }));
+
+    people = (data.people || []).map(p => ({
+      id: p.id, emoji: p.emoji || '🧑', name: p.name || '',
+      role: p.role || '', email: p.email || '', status: p.status || 'invited',
+      passportNum: p.passportNum || '', passportCountry: p.passportCountry || '',
+      passportExpiry: p.passportExpiry || '', passportIssued: p.passportIssued || ''
+    }));
+
+    confirmations = (data.confirmations || []).map(c => ({
+      id: c.id, emoji: c.emoji || '📄', title: c.title || '',
+      provider: c.provider || '', number: c.number || '', link: c.link || '', notes: c.notes || ''
+    }));
+
+    legs = (data.legs || []).map(l => ({
+      id: l.id, name: l.name || '', from: l.from || '',
+      to: l.to || '', dateFrom: l.dateFrom || '', dateTo: l.dateTo || ''
+    }));
+
+    return data;
+  } catch(e) { return null; }
+}
+
+let savedTimer = null;
+function showSaved() {
+  const el = document.getElementById('save-indicator');
+  if (!el) return;
+  el.classList.add('visible');
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => el.classList.remove('visible'), 1800);
+}
+
+// ═══════════════════════════════════════════════════════
+//  BUDGET ROWS
+// ═══════════════════════════════════════════════════════
+function newRow() {
+  return { id: rowCounter++, emoji: '✏️', name: '', detail: '', link: '', amount: '', hidden: false };
+}
+
+function addSection(name = '') {
+  const section = { id: sectionCounter++, name, tab: (navTab === 0 || navTab === 1) ? navTab : 0, rows: [], rowById: new Map() };
+  sections.push(section); sectionById.set(section.id, section);
+  const row = newRow(); section.rows.push(row); section.rowById.set(row.id, row);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'section-wrapper'; wrapper.dataset.sectionId = section.id; wrapper.dataset.sectionTab = section.tab;
+  wrapper.innerHTML = sectionHTML(section);
+  elSectionsContainer.appendChild(wrapper);
+  // Show/hide based on current budget tab
+  const curBudgetTab = (navTab === 0 || navTab === 1) ? navTab : 0;
+  wrapper.style.display = (section.tab === curBudgetTab) ? '' : 'none';
+  recalculate(); saveToStorage();
+}
+
+function removeSection(id) {
+  const idx = sections.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  sections.splice(idx, 1); sectionById.delete(id);
+  elSectionsContainer.querySelector(`.section-wrapper[data-section-id="${id}"]`)?.remove();
+  recalculate(); saveToStorage();
+}
+
+function addRow(sectionId) {
+  const section = sectionById.get(sectionId); if (!section) return;
+  const row = newRow(); section.rows.push(row); section.rowById.set(row.id, row);
+  const grid = elSectionsContainer.querySelector(`.budget-grid[data-section-id="${sectionId}"]`);
+  if (grid) grid.insertAdjacentHTML('beforeend', rowHTML(sectionId, row));
+  recalculate(); saveToStorage();
+}
+
+function removeRow(sectionId, rowId) {
+  const section = sectionById.get(sectionId); if (!section) return;
+  const idx = section.rows.findIndex(r => r.id === rowId); if (idx === -1) return;
+  section.rows.splice(idx, 1); section.rowById.delete(rowId);
+  elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`)?.remove();
+  recalculate(); saveToStorage();
+}
+
+function toggleHide(sectionId, rowId) {
+  const section = sectionById.get(sectionId); if (!section) return;
+  const row = section.rowById.get(rowId); if (!row) return;
+  row.hidden = !row.hidden;
+  const rowEl = elSectionsContainer.querySelector(`.budget-row[data-row-id="${rowId}"]`);
+  if (rowEl) {
+    rowEl.classList.toggle('hidden-row', row.hidden);
+    const hideBtn = rowEl.querySelector(`[data-row-hide="${rowId}"]`);
+    if (hideBtn) { hideBtn.classList.toggle('active', row.hidden); hideBtn.title = row.hidden ? 'Show' : 'Hide'; hideBtn.textContent = row.hidden ? '👁️' : '🙈'; }
   }
+  scheduleRecalc(); saveToStorage();
+}
 
-  // --- Init ---
-  elGrandTotal        = document.getElementById('grandTotal');
-  elSummaryTotal      = document.getElementById('summaryTotal');
-  elNumPeople         = document.getElementById('numPeople');
-  elPpAmount          = document.getElementById('ppAmount');
-  elSummaryBody       = document.getElementById('summaryBody');
-  elSectionsContainer = document.getElementById('sections-container');
+function sectionHTML(section) {
+  return `
+    <div class="section-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);">Category</span>
+        <input class="section-name-input" type="text"
+          placeholder="e.g. Flights, Hotels, Parks…"
+          value="${escHtml(section.name)}" data-sid="${section.id}"
+          style="border:none;background:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;color:var(--dark);letter-spacing:0.05em;width:220px;" />
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="add-row-btn" data-sid="${section.id}">+ Add Item</button>
+        <button class="delete-btn" style="opacity:1;position:static;" data-sid-del="${section.id}">✕ Remove</button>
+      </div>
+    </div>
+    <div class="budget-grid" data-section-id="${section.id}">${section.rows.map(r => rowHTML(section.id, r)).join('')}</div>
+  `;
+}
 
-  const saved = loadFromStorage();
-  if (saved) {
-    document.getElementById('tripName').value      = saved.tripName || '';
-    document.getElementById('tripDates').value     = saved.tripDates || '';
-    document.getElementById('tripTravelers').value = saved.tripTravelers || '';
-    const mf = document.querySelectorAll('.meta-field');
-    (saved.meta || []).forEach((v, i) => { if (mf[i]) mf[i].value = v; });
-    document.querySelector('.notes-area').value = saved.notes || '';
-    if (saved.numPeople) elNumPeople.value = saved.numPeople;
-  } else {
-    initDefaultData();
-    document.getElementById('tripName').value = 'Fred and Ariel Adventure';
-    document.getElementById('tripDates').value = 'May 23 - June 5';
-    document.getElementById('tripTravelers').value = 'Fred & Ariel';
-    const metaFields = document.querySelectorAll('.meta-field');
-    if (metaFields[0]) metaFields[0].value = 'Direct YUL - MCO';
-    if (metaFields[1]) metaFields[1].value = '3 nights + more';
-    if (metaFields[2]) metaFields[2].value = '9 free days';
-  }
+function rowHTML(sectionId, row) {
+  return `
+    <div class="budget-row ${row.hidden ? 'hidden-row' : ''}" data-row-id="${row.id}" data-sid="${sectionId}">
+      <div class="row-icon-picker" title="Click to change emoji">
+        <span class="emoji-display">${row.emoji}</span>
+        <input class="emoji-input" type="text" maxlength="2" value="${row.emoji}" data-emoji-row="${row.id}" data-sid="${sectionId}" />
+      </div>
+      <div class="row-info">
+        <input class="row-name-input" type="text" placeholder="Item name"
+          value="${escHtml(row.name)}" data-field="name" data-row="${row.id}" data-sid="${sectionId}" />
+        <input class="row-detail-input" type="text" placeholder="Details…"
+          value="${escHtml(row.detail)}" data-field="detail" data-row="${row.id}" data-sid="${sectionId}" />
+        <div class="row-link-wrap">
+          <span class="link-icon">🔗</span>
+          <input class="row-link-input" type="url" placeholder="Paste a link (optional)"
+            value="${escHtml(row.link)}" data-field="link" data-row="${row.id}" data-sid="${sectionId}" />
+          <a class="link-go-btn ${row.link ? 'visible' : ''}" href="${escHtml(row.link)}"
+            target="_blank" rel="noopener" data-link-btn="${row.id}">Open ↗</a>
+        </div>
+      </div>
+      <div class="row-amount-wrap">
+        <span class="currency-tag">$ CAD</span>
+        <input class="amount-input" type="number" placeholder="0.00"
+          value="${row.amount}" data-field="amount" data-row="${row.id}" data-sid="${sectionId}" />
+      </div>
+      <div class="row-actions">
+        <button class="hide-btn ${row.hidden ? 'active' : ''}" title="${row.hidden ? 'Show' : 'Hide'}" data-row-hide="${row.id}" data-sid="${sectionId}">${row.hidden ? '👁️' : '🙈'}</button>
+        <button class="delete-btn" title="Remove" data-row-del="${row.id}" data-sid="${sectionId}">✕</button>
+      </div>
+    </div>
+  `;
+}
 
-  renderAll();
+function renderAll() {
+  elSectionsContainer.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  sections.forEach(section => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'section-wrapper'; wrapper.dataset.sectionId = section.id; wrapper.dataset.sectionTab = section.tab || 0;
+    wrapper.innerHTML = sectionHTML(section);
+    frag.appendChild(wrapper);
+  });
+  elSectionsContainer.appendChild(frag);
+  updateSectionVisibility((navTab === 0 || navTab === 1) ? navTab : 0);
+  recalculate();
+}
 
-  // Apply active tab to UI
-  elSectionsContainer.dataset.activeTab = String(activeTab);
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.tab) === activeTab);
+function initEventDelegation() {
+  elSectionsContainer.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const sid = btn.dataset.sid !== undefined ? parseInt(btn.dataset.sid) : NaN;
+    if (btn.dataset.sidDel !== undefined) removeSection(parseInt(btn.dataset.sidDel));
+    else if (btn.dataset.rowHide !== undefined) toggleHide(sid, parseInt(btn.dataset.rowHide));
+    else if (btn.dataset.rowDel !== undefined) removeRow(sid, parseInt(btn.dataset.rowDel));
+    else if (btn.classList.contains('add-row-btn') && !isNaN(sid)) addRow(sid);
   });
 
-  initEventDelegation();
+  elSectionsContainer.addEventListener('input', e => {
+    const el = e.target;
+    if (el.classList.contains('section-name-input')) {
+      const s = sectionById.get(parseInt(el.dataset.sid));
+      if (s) s.name = el.value;
+      scheduleRecalc(); saveToStorage();
+    } else if (el.dataset.field !== undefined && el.dataset.row !== undefined) {
+      const section = sectionById.get(parseInt(el.dataset.sid)); if (!section) return;
+      const row = section.rowById.get(parseInt(el.dataset.row)); if (!row) return;
+      row[el.dataset.field] = el.value;
+      if (el.dataset.field === 'link') {
+        const linkBtn = elSectionsContainer.querySelector(`[data-link-btn="${el.dataset.row}"]`);
+        if (linkBtn) { const v = el.value.trim(); linkBtn.href = v; linkBtn.classList.toggle('visible', v.length > 0); }
+      }
+      scheduleRecalc(); saveToStorage();
+    } else if (el.classList.contains('emoji-input')) {
+      const val = el.value.trim() || '✏️';
+      const section = sectionById.get(parseInt(el.dataset.sid)); if (!section) return;
+      const row = section.rowById.get(parseInt(el.dataset.emojiRow)); if (!row) return;
+      row.emoji = val;
+      const d = el.parentElement.querySelector('.emoji-display');
+      if (d) d.textContent = val;
+      saveToStorage();
+    }
+  });
+}
 
-  // Auto-save hero / meta / notes / numPeople
-  ['tripName','tripDates','tripTravelers'].forEach(id =>
-    document.getElementById(id).addEventListener('input', saveToStorage)
-  );
-  document.querySelectorAll('.meta-field').forEach(f => f.addEventListener('input', saveToStorage));
-  document.querySelector('.notes-area').addEventListener('input', saveToStorage);
-  elNumPeople.addEventListener('input', saveToStorage);
+// ═══════════════════════════════════════════════════════
+//  RECALCULATE
+// ═══════════════════════════════════════════════════════
+function recalculate() {
+  let grandTotal = 0;
+  const tabTotals = [0, 0];
+  const tabRows   = [[], []];
+
+  sections.forEach(section => {
+    let sTotal = 0;
+    section.rows.forEach(row => { if (!row.hidden) sTotal += parseFloat(row.amount) || 0; });
+    grandTotal += sTotal;
+    const t = section.tab || 0;
+    tabTotals[t] += sTotal;
+    if (section.name || sTotal) tabRows[t].push({ name: section.name || 'Unnamed', amount: sTotal });
+  });
+
+  elGrandTotal.textContent = '$' + fmt(grandTotal);
+  elSummaryTotal.textContent = '$' + fmt(grandTotal);
+  const people_n = parseInt(elNumPeople.value) || 1;
+  elPpAmount.textContent = '$' + fmt(grandTotal / people_n);
+
+  const TAB_LABELS = ['✈️ Bookings', '🍽️ Food & Fun'];
+  [0, 1].forEach(t => {
+    const el = document.getElementById(`tab${t}Badge`);
+    if (el) el.textContent = tabTotals[t] ? '$' + fmt(tabTotals[t]) : '';
+  });
+
+  let html = '', hasAny = false;
+  [0, 1].forEach(t => {
+    if (!tabRows[t].length) return;
+    hasAny = true;
+    html += `<tr class="summary-tab-header"><td colspan="2">${TAB_LABELS[t]}</td></tr>`;
+    html += tabRows[t].map(r => `<tr><td class="s-name" style="padding-left:28px;">${escHtml(r.name)}</td><td class="s-amount">$${fmt(r.amount)}</td></tr>`).join('');
+    html += `<tr class="summary-subtotal"><td class="s-name">Subtotal</td><td class="s-amount">$${fmt(tabTotals[t])}</td></tr>`;
+  });
+  elSummaryBody.innerHTML = hasAny ? html : '<tr><td colspan="2" style="text-align:center;color:#ccc;padding:24px;font-size:0.85rem;">Add categories above to see summary</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════
+//  PACKING LIST
+// ═══════════════════════════════════════════════════════
+function addPackCategory(name = '', emoji = '📦') {
+  const cat = { id: packCatCounter++, emoji, name, items: [] };
+  packCats.push(cat);
+  const el = buildPackCatEl(cat);
+  document.getElementById('packCatsContainer').appendChild(el);
+  updatePackProgress();
+  saveToStorage();
+  return cat;
+}
+
+function removePackCategory(catId) {
+  const idx = packCats.findIndex(c => c.id === catId); if (idx === -1) return;
+  packCats.splice(idx, 1);
+  document.querySelector(`.pack-category[data-cat-id="${catId}"]`)?.remove();
+  updatePackProgress(); saveToStorage();
+}
+
+function addPackItem(catId, text = '') {
+  const cat = packCats.find(c => c.id === catId); if (!cat) return;
+  const item = { id: packItemCounter++, text, checked: false };
+  cat.items.push(item);
+  const container = document.querySelector(`.pack-items[data-cat-id="${catId}"]`);
+  if (container) container.insertAdjacentHTML('beforeend', packItemHTML(catId, item));
+  updatePackCatProgress(catId); updatePackProgress(); saveToStorage();
+  // Focus the new item
+  const newInput = document.querySelector(`.pack-item[data-item-id="${item.id}"] .pack-item-text`);
+  if (newInput) newInput.focus();
+}
+
+function removePackItem(catId, itemId) {
+  const cat = packCats.find(c => c.id === catId); if (!cat) return;
+  const idx = cat.items.findIndex(i => i.id === itemId); if (idx === -1) return;
+  cat.items.splice(idx, 1);
+  document.querySelector(`.pack-item[data-item-id="${itemId}"]`)?.remove();
+  updatePackCatProgress(catId); updatePackProgress(); saveToStorage();
+}
+
+function togglePackItem(catId, itemId) {
+  const cat = packCats.find(c => c.id === catId); if (!cat) return;
+  const item = cat.items.find(i => i.id === itemId); if (!item) return;
+  item.checked = !item.checked;
+  const itemEl = document.querySelector(`.pack-item[data-item-id="${itemId}"]`);
+  if (itemEl) {
+    const cb = itemEl.querySelector('.pack-checkbox');
+    if (cb) { cb.classList.toggle('checked', item.checked); cb.textContent = item.checked ? '✓' : ''; }
+    itemEl.classList.toggle('done', item.checked);
+  }
+  updatePackCatProgress(catId); updatePackProgress(); saveToStorage();
+}
+
+function updatePackCatProgress(catId) {
+  const cat = packCats.find(c => c.id === catId); if (!cat) return;
+  const total = cat.items.length, done = cat.items.filter(i => i.checked).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const fill = document.querySelector(`.pack-mini-fill[data-cat-id="${catId}"]`);
+  const text = document.querySelector(`.pack-progress-text[data-cat-id="${catId}"]`);
+  if (fill) fill.style.width = pct + '%';
+  if (text) text.textContent = `${done}/${total}`;
+}
+
+function updatePackProgress() {
+  let total = 0, done = 0;
+  packCats.forEach(c => { total += c.items.length; done += c.items.filter(i => i.checked).length; });
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('packProgressText').textContent = `${done} / ${total} packed`;
+  document.getElementById('packOverallFill').style.width = pct + '%';
+  const badge = document.getElementById('packBadge');
+  if (badge) badge.textContent = total ? `${done}/${total}` : '';
+}
+
+function packItemHTML(catId, item) {
+  return `
+    <div class="pack-item${item.checked ? ' done' : ''}" data-item-id="${item.id}" data-cat-id="${catId}">
+      <div class="pack-checkbox${item.checked ? ' checked' : ''}"
+        onclick="togglePackItem(${catId},${item.id})" data-cb-item="${item.id}">${item.checked ? '✓' : ''}</div>
+      <input class="pack-item-text" type="text" placeholder="Add item…"
+        value="${escHtml(item.text)}" data-item="${item.id}" data-cat="${catId}" />
+      <button class="pack-item-del" onclick="removePackItem(${catId},${item.id})" title="Remove">✕</button>
+    </div>
+  `;
+}
+
+function buildPackCatEl(cat) {
+  const div = document.createElement('div');
+  div.className = 'pack-category'; div.dataset.catId = cat.id;
+  div.innerHTML = `
+    <div class="pack-cat-header">
+      <div class="pack-cat-title">
+        <div class="pack-cat-emoji-btn" title="Change emoji">
+          <span class="pack-cat-emoji-display">${cat.emoji}</span>
+          <input class="pack-cat-emoji-input" type="text" maxlength="2" value="${cat.emoji}" data-cat-emoji="${cat.id}" />
+        </div>
+        <input class="pack-cat-name-input" type="text" placeholder="Category name"
+          value="${escHtml(cat.name)}" data-cat-name="${cat.id}" />
+      </div>
+      <div class="pack-cat-right">
+        <span class="pack-progress-text" data-cat-id="${cat.id}">0/0</span>
+        <div class="pack-mini-bar"><div class="pack-mini-fill" data-cat-id="${cat.id}" style="width:0%"></div></div>
+        <button class="btn-icon-only" onclick="removePackCategory(${cat.id})" title="Remove category">✕</button>
+      </div>
+    </div>
+    <div class="pack-items" data-cat-id="${cat.id}">
+      ${cat.items.map(i => packItemHTML(cat.id, i)).join('')}
+    </div>
+    <button class="pack-add-item-btn" onclick="addPackItem(${cat.id})">+ Add item</button>
+  `;
+  // Event delegation for inputs
+  div.addEventListener('input', e => {
+    const el = e.target;
+    if (el.dataset.catName) {
+      const c = packCats.find(c => c.id === parseInt(el.dataset.catName));
+      if (c) c.name = el.value; saveToStorage();
+    } else if (el.dataset.catEmoji) {
+      const val = el.value.trim() || '📦';
+      const c = packCats.find(c => c.id === parseInt(el.dataset.catEmoji));
+      if (c) c.emoji = val;
+      const d = el.parentElement.querySelector('.pack-cat-emoji-display');
+      if (d) d.textContent = val; saveToStorage();
+    } else if (el.dataset.item) {
+      const c = packCats.find(c => c.id === parseInt(el.dataset.cat));
+      if (c) { const i = c.items.find(i => i.id === parseInt(el.dataset.item)); if (i) i.text = el.value; }
+      saveToStorage();
+    }
+  });
+  // Update progress after render
+  setTimeout(() => updatePackCatProgress(cat.id), 0);
+  return div;
+}
+
+function renderPacking() {
+  const container = document.getElementById('packCatsContainer');
+  container.innerHTML = '';
+  packCats.forEach(cat => container.appendChild(buildPackCatEl(cat)));
+  updatePackProgress();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PEOPLE
+// ═══════════════════════════════════════════════════════
+const STATUS_CYCLE = ['confirmed', 'invited', 'maybe', 'declined'];
+const STATUS_LABELS = { confirmed: '✅ Confirmed', invited: '📬 Invited', maybe: '🤔 Maybe', declined: '❌ Declined' };
+
+function addPerson(opts = {}) {
+  const person = {
+    id: personCounter++,
+    emoji: opts.emoji || '🧑',
+    name: opts.name || '',
+    role: opts.role || 'Traveler',
+    email: opts.email || '',
+    status: opts.status || 'invited',
+    passportNum: opts.passportNum || '',
+    passportCountry: opts.passportCountry || '',
+    passportExpiry: opts.passportExpiry || '',
+    passportIssued: opts.passportIssued || ''
+  };
+  people.push(person);
+  const container = document.getElementById('peopleContainer');
+  container.insertAdjacentHTML('beforeend', personHTML(person));
+  updatePeopleBadge(); saveToStorage();
+}
+
+function removePerson(id) {
+  const idx = people.findIndex(p => p.id === id); if (idx === -1) return;
+  people.splice(idx, 1);
+  document.querySelector(`.person-card[data-person-id="${id}"]`)?.remove();
+  updatePeopleBadge(); saveToStorage();
+}
+
+function cycleStatus(id) {
+  const p = people.find(p => p.id === id); if (!p) return;
+  const cur = STATUS_CYCLE.indexOf(p.status);
+  p.status = STATUS_CYCLE[(cur + 1) % STATUS_CYCLE.length];
+  const btn = document.querySelector(`.status-cycle-btn[data-status-btn="${id}"]`);
+  if (btn) {
+    btn.className = `status-cycle-btn status-${p.status}`;
+    btn.textContent = STATUS_LABELS[p.status];
+  }
+  updatePeopleBadge(); saveToStorage();
+}
+
+function updatePeopleBadge() {
+  const confirmed = people.filter(p => p.status === 'confirmed').length;
+  const badge = document.getElementById('peopleBadge');
+  if (badge) badge.textContent = people.length ? `${confirmed}/${people.length}` : '';
+}
+
+function personHTML(p) {
+  return `
+    <div class="person-card" data-person-id="${p.id}">
+      <div class="person-emoji-wrap" title="Click to change emoji">
+        <span class="person-emoji-display">${p.emoji}</span>
+        <input class="person-emoji-input" type="text" maxlength="2" value="${p.emoji}" data-person-emoji="${p.id}" />
+      </div>
+      <div class="person-info">
+        <input class="person-name-input" type="text" placeholder="Name"
+          value="${escHtml(p.name)}" data-person-name="${p.id}" />
+        <input class="person-role-input" type="text" placeholder="Role (e.g. Traveler, Guest)"
+          value="${escHtml(p.role)}" data-person-role="${p.id}" />
+        <input class="person-email-input" type="email" placeholder="Email (optional)"
+          value="${escHtml(p.email)}" data-person-email="${p.id}" />
+      </div>
+      <div class="person-right">
+        <button class="status-cycle-btn status-${p.status}" data-status-btn="${p.id}" onclick="cycleStatus(${p.id})">${STATUS_LABELS[p.status]}</button>
+      </div>
+      <div class="person-actions">
+        <button class="btn-icon-only" onclick="removePerson(${p.id})" title="Remove">✕</button>
+      </div>
+      <details class="person-passport">
+        <summary>🛂 Passport Details <span style="margin-left:auto;font-size:0.6rem;">▾</span></summary>
+        <div class="passport-body">
+          <div>
+            <div class="passport-field-label">Passport #</div>
+            <input class="passport-input" type="text" placeholder="e.g. AB 123456"
+              value="${escHtml(p.passportNum)}" data-person-passport-num="${p.id}" />
+          </div>
+          <div>
+            <div class="passport-field-label">Issuing Country</div>
+            <input class="passport-input" type="text" placeholder="e.g. Canada"
+              value="${escHtml(p.passportCountry)}" data-person-passport-country="${p.id}" />
+          </div>
+          <div>
+            <div class="passport-field-label">Issue Date</div>
+            <input class="passport-input" type="text" placeholder="e.g. Jan 15, 2020"
+              value="${escHtml(p.passportIssued)}" data-person-passport-issued="${p.id}" />
+          </div>
+          <div>
+            <div class="passport-field-label">Expiry Date</div>
+            <input class="passport-input" type="text" placeholder="e.g. Jan 15, 2030"
+              value="${escHtml(p.passportExpiry)}" data-person-passport-expiry="${p.id}" />
+          </div>
+        </div>
+      </details>
+    </div>
+  `;
+}
+
+function renderPeople() {
+  const container = document.getElementById('peopleContainer');
+  container.innerHTML = '';
+  people.forEach(p => container.insertAdjacentHTML('beforeend', personHTML(p)));
+  // Event delegation
+  container.addEventListener('input', e => {
+    const el = e.target;
+    if (el.dataset.personName) { const p = people.find(p => p.id === parseInt(el.dataset.personName)); if (p) { p.name = el.value; saveToStorage(); } }
+    else if (el.dataset.personRole) { const p = people.find(p => p.id === parseInt(el.dataset.personRole)); if (p) { p.role = el.value; saveToStorage(); } }
+    else if (el.dataset.personEmail) { const p = people.find(p => p.id === parseInt(el.dataset.personEmail)); if (p) { p.email = el.value; saveToStorage(); } }
+    else if (el.dataset.personEmoji) {
+      const val = el.value.trim() || '🧑';
+      const p = people.find(p => p.id === parseInt(el.dataset.personEmoji)); if (!p) return;
+      p.emoji = val;
+      const d = el.parentElement.querySelector('.person-emoji-display');
+      if (d) d.textContent = val; saveToStorage();
+    }
+  });
+  updatePeopleBadge();
+}
+
+// ═══════════════════════════════════════════════════════
+//  CONFIRMATIONS
+// ═══════════════════════════════════════════════════════
+function addConfirmation(opts = {}) {
+  const conf = {
+    id: confCounter++,
+    emoji: opts.emoji || '📄',
+    title: opts.title || '',
+    provider: opts.provider || '',
+    number: opts.number || '',
+    link: opts.link || '',
+    notes: opts.notes || ''
+  };
+  confirmations.push(conf);
+  document.getElementById('confContainer').insertAdjacentHTML('beforeend', confHTML(conf));
+  updateConfBadge(); saveToStorage();
+}
+
+function removeConfirmation(id) {
+  const idx = confirmations.findIndex(c => c.id === id); if (idx === -1) return;
+  confirmations.splice(idx, 1);
+  document.querySelector(`.conf-card[data-conf-id="${id}"]`)?.remove();
+  updateConfBadge(); saveToStorage();
+}
+
+function copyConfNumber(id) {
+  const c = confirmations.find(c => c.id === id); if (!c || !c.number) return;
+  navigator.clipboard.writeText(c.number).then(() => {
+    const btn = document.querySelector(`.copy-btn[data-copy-btn="${id}"]`);
+    if (btn) { btn.textContent = '✓ Copied'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000); }
+  }).catch(() => {});
+}
+
+function updateConfBadge() {
+  const badge = document.getElementById('confBadge');
+  if (badge) badge.textContent = confirmations.length ? String(confirmations.length) : '';
+}
+
+function confHTML(c) {
+  const linkVisible = c.link ? 'visible' : '';
+  return `
+    <div class="conf-card" data-conf-id="${c.id}">
+      <div class="conf-top">
+        <div class="conf-emoji-wrap" title="Change emoji">
+          <span class="conf-emoji-display">${c.emoji}</span>
+          <input class="conf-emoji-input" type="text" maxlength="2" value="${c.emoji}" data-conf-emoji="${c.id}" />
+        </div>
+        <div class="conf-main">
+          <input class="conf-title-input" type="text" placeholder="Booking name (e.g. Air Canada Flights)"
+            value="${escHtml(c.title)}" data-conf-title="${c.id}" />
+          <input class="conf-provider-input" type="text" placeholder="Provider (e.g. Air Canada)"
+            value="${escHtml(c.provider)}" data-conf-provider="${c.id}" />
+        </div>
+      </div>
+      <div class="conf-number-row">
+        <span class="conf-num-label">Confirmation #</span>
+        <input class="conf-num-input" type="text" placeholder="Paste confirmation number here…"
+          value="${escHtml(c.number)}" data-conf-number="${c.id}" />
+        <button class="copy-btn" data-copy-btn="${c.id}" onclick="copyConfNumber(${c.id})">Copy</button>
+      </div>
+      <div class="conf-link-row">
+        <span style="font-size:0.75rem;opacity:0.4;">🔗</span>
+        <input class="conf-link-input" type="url" placeholder="Booking URL (optional)"
+          value="${escHtml(c.link)}" data-conf-link="${c.id}" />
+        <a class="conf-open-btn ${linkVisible}" href="${escHtml(c.link)}" target="_blank" rel="noopener" data-conf-link-btn="${c.id}">Open ↗</a>
+      </div>
+      <textarea class="conf-notes-input" placeholder="Notes (e.g. check-in time, baggage rules, special requests…)"
+        data-conf-notes="${c.id}" rows="2">${escHtml(c.notes)}</textarea>
+      <div class="conf-actions">
+        <button class="btn-icon-only" onclick="removeConfirmation(${c.id})" title="Remove">✕</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderConfirmations() {
+  const container = document.getElementById('confContainer');
+  container.innerHTML = '';
+  confirmations.forEach(c => container.insertAdjacentHTML('beforeend', confHTML(c)));
+  // Event delegation
+  container.addEventListener('input', e => {
+    const el = e.target;
+    const getConf = (key) => confirmations.find(c => c.id === parseInt(el.dataset[key]));
+    if (el.dataset.confTitle) { const c = getConf('confTitle'); if (c) { c.title = el.value; saveToStorage(); } }
+    else if (el.dataset.confProvider) { const c = getConf('confProvider'); if (c) { c.provider = el.value; saveToStorage(); } }
+    else if (el.dataset.confNumber) { const c = getConf('confNumber'); if (c) { c.number = el.value; saveToStorage(); } }
+    else if (el.dataset.confNotes) { const c = getConf('confNotes'); if (c) { c.notes = el.value; saveToStorage(); } }
+    else if (el.dataset.confLink) {
+      const c = getConf('confLink'); if (c) { c.link = el.value; saveToStorage(); }
+      const btn = container.querySelector(`[data-conf-link-btn="${el.dataset.confLink}"]`);
+      if (btn) { const v = el.value.trim(); btn.href = v; btn.classList.toggle('visible', v.length > 0); }
+    } else if (el.dataset.confEmoji) {
+      const val = el.value.trim() || '📄';
+      const c = confirmations.find(c => c.id === parseInt(el.dataset.confEmoji)); if (!c) return;
+      c.emoji = val;
+      const d = el.parentElement.querySelector('.conf-emoji-display');
+      if (d) d.textContent = val; saveToStorage();
+    }
+  });
+  updateConfBadge();
+}
+
+// ═══════════════════════════════════════════════════════
+//  LEGS
+// ═══════════════════════════════════════════════════════
+function addLeg(opts = {}) {
+  const leg = {
+    id: legCounter++,
+    name: opts.name || '',
+    from: opts.from || '',
+    to: opts.to || '',
+    dateFrom: opts.dateFrom || '',
+    dateTo: opts.dateTo || ''
+  };
+  legs.push(leg);
+  renderLegs();
+  saveToStorage();
+}
+
+function removeLeg(id) {
+  const idx = legs.findIndex(l => l.id === id); if (idx === -1) return;
+  legs.splice(idx, 1);
+  renderLegs(); saveToStorage();
+}
+
+function renderLegs() {
+  const container = document.getElementById('legsContainer');
+  container.innerHTML = '';
+  legs.forEach((leg, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'leg-pill'; pill.dataset.legId = leg.id;
+    pill.innerHTML = `
+      <div class="leg-pill-num">${i + 1}</div>
+      <div class="leg-pill-body">
+        <input class="leg-name-input" type="text" placeholder="Leg name" value="${escHtml(leg.name)}" data-leg-name="${leg.id}" />
+        <div class="leg-meta-row">
+          <input class="leg-meta-input" type="text" placeholder="From" style="width:80px" value="${escHtml(leg.from)}" data-leg-from="${leg.id}" />
+          <span class="leg-sep">→</span>
+          <input class="leg-meta-input" type="text" placeholder="To" style="width:80px" value="${escHtml(leg.to)}" data-leg-from="${leg.id}" />
+          <span class="leg-sep">·</span>
+          <input class="leg-meta-input" type="text" placeholder="Start" style="width:55px" value="${escHtml(leg.dateFrom)}" data-leg-datefrom="${leg.id}" />
+          <span class="leg-sep">–</span>
+          <input class="leg-meta-input" type="text" placeholder="End" style="width:55px" value="${escHtml(leg.dateTo)}" data-leg-dateto="${leg.id}" />
+        </div>
+      </div>
+      <button class="leg-remove-btn" onclick="removeLeg(${leg.id})" title="Remove leg">✕</button>
+    `;
+    // Input handlers
+    pill.addEventListener('input', e => {
+      const el = e.target; const l = legs.find(l => l.id === leg.id); if (!l) return;
+      if (el.dataset.legName !== undefined) l.name = el.value;
+      else if (el.dataset.legFrom !== undefined) {
+        // figure out which one (from vs to by position)
+        const inputs = pill.querySelectorAll('.leg-meta-input');
+        l.from = inputs[0].value; l.to = inputs[1].value;
+      }
+      else if (el.dataset.legDatefrom !== undefined) l.dateFrom = el.value;
+      else if (el.dataset.legDateto !== undefined) l.dateTo = el.value;
+      saveToStorage();
+    });
+    container.appendChild(pill);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+function fmt(n) { return Math.round(n).toLocaleString(); }
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CLEAR ALL
+// ═══════════════════════════════════════════════════════
+function clearAll() {
+  if (!confirm('Clear everything and start fresh?')) return;
+  sections = []; sectionById.clear(); sectionCounter = 0; rowCounter = 0;
+  packCats = []; packCatCounter = 0; packItemCounter = 0;
+  people = []; personCounter = 0;
+  confirmations = []; confCounter = 0;
+  legs = []; legCounter = 0;
+  navTab = 0;
+  ['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('.meta-field').forEach(f => f.value = '');
+  document.querySelector('.notes-area').value = '';
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('florida_trip_budget_v1');
+  renderAll();
+  renderPacking();
+  renderPeople();
+  renderConfirmations();
+  renderLegs();
+  switchNavTab(0);
+}
+
+// ═══════════════════════════════════════════════════════
+//  DEFAULT DATA
+// ═══════════════════════════════════════════════════════
+function initDefaultData() {
+  // Budget sections
+  const raw = [
+    { name: 'Flights', tab: 0, rows: [
+      { emoji: '✏️', name: 'YUL to MCO - MCO to YUL', detail: '✈️ AC 1636 · May 23 15:10→18:31 non-stop (3h21m) · ✈️ AC 1641 · Jun 5 19:30→22:46 non-stop (3h16m) · Air Canada Rouge · Economy Standard · 2 Adults', link: 'https://www.aircanada.com/booking/ca/en/aco/review-trip', amount: '1566.36', hidden: false }
+    ]},
+    { name: 'Ground Transport', tab: 0, rows: [
+      { emoji: '✏️', name: 'Economy car', detail: '', link: 'https://www.expedia.ca/carsearch/details', amount: '269.39', hidden: false },
+      { emoji: '✏️', name: 'Train SAINTE-FOY → MONTREAL CENTRAL', detail: 'Via Rail · May 23 Dep. 8:34 · Jun 6 return', link: 'https://reservia.viarail.ca/en/booking/create/trip/2', amount: '197.76', hidden: false }
+    ]},
+    { name: 'Accommodation', tab: 0, rows: [
+      { emoji: '✏️', name: 'B&B Hotel Orlando International Drive', detail: '', link: '', amount: '461.21', hidden: true },
+      { emoji: '✏️', name: 'Cozy hotel room – Developer Inn Express Resort', detail: '', link: '', amount: '363.68', hidden: false }
+    ]},
+    { name: 'Theme Parks', tab: 0, rows: [
+      { emoji: '✏️', name: 'Universal 2-Park Express Pass (1 day)', detail: '', link: '', amount: '518.94', hidden: true },
+      { emoji: '✏️', name: '2-Day Universal Express Pass incl. Epic Universe', detail: '', link: '', amount: '579.64', hidden: false }
+    ]},
+    { name: 'Food & Activities', tab: 1, rows: [
+      { emoji: '✏️', name: 'Food & Activities budget', detail: '', link: '', amount: '770', hidden: false },
+      { emoji: '✏️', name: 'Rainbow Springs inner tubing', detail: '', link: 'https://visitrainbowsprings.com/tubing/', amount: '30.00', hidden: false }
+    ]}
+  ];
+  raw.forEach(s => {
+    const section = { id: sectionCounter++, name: s.name, tab: s.tab, rows: [], rowById: new Map() };
+    sections.push(section); sectionById.set(section.id, section);
+    s.rows.forEach(r => { const row = { id: rowCounter++, ...r }; section.rows.push(row); section.rowById.set(row.id, row); });
+  });
+
+  // Default packing list
+  const packDefaults = [
+    { emoji: '📄', name: 'Documents & Essentials', items: ['Passport / Photo ID', 'Boarding passes (printed or app)', 'Hotel reservation printouts', 'Travel insurance documents', 'Credit cards & USD cash', 'Emergency contact list'] },
+    { emoji: '👕', name: 'Clothing', items: ['T-shirts (lightweight)', 'Shorts', 'Swimsuit(s)', 'Light jacket (for AC indoors)', 'Walking shoes / sneakers', 'Sandals / flip-flops', 'Sun hat / baseball cap', 'Sunglasses', '1 nicer outfit for dinner'] },
+    { emoji: '🧴', name: 'Toiletries & Health', items: ['Sunscreen SPF 50+  (bring lots!)', 'After-sun lotion / aloe', 'Bug spray', 'Prescription medications', 'Pain relievers / fever reducer', 'Stomach / digestive meds', 'First aid basics', 'Hand sanitizer'] },
+    { emoji: '📱', name: 'Electronics', items: ['Phone + charger', 'Power bank / portable battery', 'Camera + memory card', 'Headphones / earbuds', 'US plug adapter (not needed from CA)'] },
+    { emoji: '🎢', name: 'Theme Park Essentials', items: ['Comfortable walking shoes', 'Small backpack / day bag', 'Refillable water bottle', 'Poncho / light rain jacket', 'Portable fan or cooling towel', 'Snacks & granola bars'] }
+  ];
+  packDefaults.forEach(cat => {
+    const c = { id: packCatCounter++, emoji: cat.emoji, name: cat.name, items: [] };
+    cat.items.forEach(text => c.items.push({ id: packItemCounter++, text, checked: false }));
+    packCats.push(c);
+  });
+
+  // Default people
+  const defaultPeople = [
+    { emoji: '🧔', name: 'Fred', role: 'Traveler', email: '', status: 'confirmed' },
+    { emoji: '👩', name: 'Ariel', role: 'Traveler', email: '', status: 'confirmed' }
+  ];
+  defaultPeople.forEach(p => { people.push({ id: personCounter++, ...p }); });
+
+  // Default confirmations
+  const defaultConfs = [
+    { emoji: '✈️', title: 'Air Canada Flights', provider: 'Air Canada', number: '', link: 'https://www.aircanada.com/', notes: 'YUL→MCO May 23 · MCO→YUL Jun 5' },
+    { emoji: '🏨', title: 'Hotel – Developer Inn Express Resort', provider: 'Expedia', number: '', link: '', notes: '' },
+    { emoji: '🎢', title: 'Universal Express Passes (2-Day)', provider: 'Undercover Tourist', number: '', link: 'https://www.undercovertourist.com/', notes: '' },
+    { emoji: '🚆', title: 'Via Rail Train – Sainte-Foy ↔ Montréal', provider: 'Via Rail', number: '', link: 'https://reservia.viarail.ca/', notes: 'May 23 dep. 8:34 / Jun 6 return' }
+  ];
+  defaultConfs.forEach(c => { confirmations.push({ id: confCounter++, ...c }); });
+
+  // Default legs
+  legs.push({ id: legCounter++, name: 'Florida Adventure', from: 'Quebec City', to: 'Orlando, FL', dateFrom: 'May 23', dateTo: 'Jun 5' });
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+elGrandTotal        = document.getElementById('grandTotal');
+elSummaryTotal      = document.getElementById('summaryTotal');
+elNumPeople         = document.getElementById('numPeople');
+elPpAmount          = document.getElementById('ppAmount');
+elSummaryBody       = document.getElementById('summaryBody');
+elSectionsContainer = document.getElementById('sections-container');
+
+const saved = loadFromStorage();
+if (saved) {
+  document.getElementById('tripName').value      = saved.tripName || '';
+  document.getElementById('tripDates').value     = saved.tripDates || '';
+  document.getElementById('tripTravelers').value = saved.tripTravelers || '';
+  const mf = document.querySelectorAll('.meta-field');
+  (saved.meta || []).forEach((v, i) => { if (mf[i]) mf[i].value = v; });
+  const notesEl = document.querySelector('.notes-area');
+  if (notesEl) notesEl.value = saved.notes || '';
+  if (saved.numPeople) elNumPeople.value = saved.numPeople;
+} else {
+  initDefaultData();
+  document.getElementById('tripName').value      = 'Fred & Ariel Adventure';
+  document.getElementById('tripDates').value     = 'May 23 – June 5, 2026';
+  document.getElementById('tripTravelers').value = 'Fred & Ariel';
+  const metaFields = document.querySelectorAll('.meta-field');
+  if (metaFields[0]) metaFields[0].value = 'Direct YUL → MCO';
+  if (metaFields[1]) metaFields[1].value = '3 nights I-Drive';
+  if (metaFields[2]) metaFields[2].value = '9 free days w/ family';
+}
+
+renderAll();
+renderPacking();
+renderPeople();
+renderConfirmations();
+renderLegs();
+initEventDelegation();
+switchNavTab(navTab);
+
+// Auto-save hero / meta / notes / numPeople
+['tripName','tripDates','tripTravelers'].forEach(id => document.getElementById(id).addEventListener('input', saveToStorage));
+document.querySelectorAll('.meta-field').forEach(f => f.addEventListener('input', saveToStorage));
+const notesArea = document.querySelector('.notes-area');
+if (notesArea) notesArea.addEventListener('input', saveToStorage);
+elNumPeople.addEventListener('input', saveToStorage);
+
+// ═══════════════════════════════════════════════════════
+//  COUNTDOWN
+// ═══════════════════════════════════════════════════════
+(function startCountdown() {
+  function getTargetDate() {
+    // Try to parse trip start date from tripDates field or default to May 23, 2026
+    const raw = document.getElementById('tripDates').value.trim();
+    // Try to extract first date from strings like "May 23 – June 5, 2026" or "May 23 - June 5"
+    const match = raw.match(/([A-Za-z]+\s+\d{1,2})[\s,\-–]+.*(20\d\d)?/);
+    if (match) {
+      const year = (raw.match(/20\d\d/) || ['2026'])[0];
+      const attempt = new Date(match[1] + ', ' + year);
+      if (!isNaN(attempt)) return attempt;
+    }
+    return new Date('2026-05-23T00:00:00');
+  }
+
+  function tick() {
+    const now = new Date();
+    const target = getTargetDate();
+    const diff = target - now;
+
+    const msgEl = document.getElementById('countdownMsg');
+
+    if (diff <= 0) {
+      // Trip has started or passed
+      const tripEnd = new Date('2026-06-05T23:59:59');
+      if (now <= tripEnd) {
+        document.getElementById('cdDays').textContent  = '🎉';
+        document.getElementById('cdHours').textContent = '🌴';
+        document.getElementById('cdMins').textContent  = '✈️';
+        document.getElementById('cdSecs').textContent  = '🎢';
+        if (msgEl) msgEl.textContent = "You're on your trip — enjoy every moment!";
+      } else {
+        document.getElementById('cdDays').textContent  = '✅';
+        document.getElementById('cdHours').textContent = '✅';
+        document.getElementById('cdMins').textContent  = '✅';
+        document.getElementById('cdSecs').textContent  = '✅';
+        if (msgEl) msgEl.textContent = 'Trip completed — hope it was amazing!';
+      }
+      return;
+    }
+
+    const days  = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins  = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs  = Math.floor((diff % (1000 * 60)) / 1000);
+
+    document.getElementById('cdDays').textContent  = days;
+    document.getElementById('cdHours').textContent = String(hours).padStart(2,'0');
+    document.getElementById('cdMins').textContent  = String(mins).padStart(2,'0');
+    document.getElementById('cdSecs').textContent  = String(secs).padStart(2,'0');
+
+    const label = days === 1 ? 'day' : 'days';
+    if (msgEl) msgEl.textContent = `${days} ${label} until your Florida adventure! 🌴`;
+  }
+
+  tick();
+  setInterval(tick, 1000);
+
+  // Refresh countdown if trip dates field changes
+  document.getElementById('tripDates').addEventListener('input', tick);
+})();
 </script>
 </body>
 </html>
