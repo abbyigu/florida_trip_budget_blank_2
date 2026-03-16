@@ -526,6 +526,35 @@
   }
   .pack-add-item-btn:hover { border-color: var(--lime); color: var(--lime); }
 
+  /* ── AI Packing Modal ── */
+  .ai-fab { display:flex;align-items:center;gap:6px;padding:8px 18px;border-radius:20px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;font-size:0.82rem;font-weight:600;cursor:pointer;transition:opacity 0.2s,transform 0.15s;letter-spacing:0.02em; }
+  .ai-fab:hover { opacity:0.88;transform:translateY(-1px); }
+  .ai-overlay { position:fixed;inset:0;background:rgba(10,20,40,0.55);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px; }
+  .ai-modal { background:#fff;border-radius:20px;padding:28px;max-width:540px;width:100%;max-height:82vh;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px rgba(0,0,0,0.25); }
+  .ai-modal-title { font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--dark); }
+  .ai-context-pill { background:#f0f4ff;border-radius:10px;padding:10px 14px;font-size:0.8rem;color:#4b5563;line-height:1.6; }
+  .ai-key-row { display:flex;gap:8px;align-items:center; }
+  .ai-key-input { flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:0.82rem;font-family:monospace;color:var(--dark);background:#fafafa;outline:none; }
+  .ai-key-input:focus { border-color:#6366f1;background:#fff; }
+  .ai-generate-btn { padding:10px 18px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity 0.2s; }
+  .ai-generate-btn:hover { opacity:0.88; }
+  .ai-generate-btn:disabled { opacity:0.45;cursor:not-allowed; }
+  .ai-status { font-size:0.8rem;color:var(--muted);min-height:18px; }
+  .ai-results { flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px; }
+  .ai-res-cat { border:1.5px solid var(--border);border-radius:12px;overflow:hidden; }
+  .ai-res-cat-header { display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;font-size:0.85rem;font-weight:600;color:var(--dark); }
+  .ai-res-cat-toggle { font-size:0.72rem;color:#6366f1;cursor:pointer;background:none;border:none;font-weight:600;padding:2px 6px; }
+  .ai-res-cat-toggle:hover { text-decoration:underline; }
+  .ai-res-items { padding:6px 14px 10px;display:flex;flex-direction:column;gap:4px; }
+  .ai-res-item { display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--dark);cursor:pointer;padding:2px 0; }
+  .ai-res-item input[type=checkbox] { accent-color:#6366f1;width:15px;height:15px;cursor:pointer;flex-shrink:0; }
+  .ai-footer { display:flex;gap:10px;justify-content:flex-end;padding-top:4px; }
+  .ai-cancel-btn { padding:9px 18px;border:1.5px solid var(--border);border-radius:12px;font-size:0.85rem;font-weight:600;color:var(--muted);background:#fff;cursor:pointer; }
+  .ai-cancel-btn:hover { border-color:var(--dark);color:var(--dark); }
+  .ai-apply-btn { padding:9px 20px;background:var(--lime);border:none;border-radius:12px;font-size:0.85rem;font-weight:600;color:#fff;cursor:pointer;transition:opacity 0.2s; }
+  .ai-apply-btn:hover { opacity:0.88; }
+  .ai-apply-btn:disabled { opacity:0.4;cursor:not-allowed; }
+
   /* ── People panel ── */
   .people-grid { display: flex; flex-direction: column; gap: 12px; }
   .person-card {
@@ -917,8 +946,31 @@
       </div>
     </div>
     <div id="packCatsContainer"></div>
-    <div style="text-align:center;margin-top:8px;">
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
       <button class="btn-add" onclick="addPackCategory()">+ Add Category</button>
+      <button class="ai-fab" onclick="openAIModal()">✨ AI Suggest</button>
+    </div>
+  </div>
+
+  <!-- ─────────────────── AI PACKING MODAL ─────────────────── -->
+  <div class="ai-overlay" id="aiOverlay" style="display:none" onclick="if(event.target===this)closeAIModal()">
+    <div class="ai-modal">
+      <div class="ai-modal-title">✨ AI Packing Suggestions</div>
+      <div class="ai-context-pill" id="aiContextPill">Loading trip info…</div>
+      <div>
+        <label style="font-size:0.75rem;font-weight:700;color:var(--muted);letter-spacing:0.08em;display:block;margin-bottom:6px;">ANTHROPIC API KEY</label>
+        <div class="ai-key-row">
+          <input class="ai-key-input" id="aiKeyInput" type="password" placeholder="sk-ant-…" autocomplete="off">
+          <button class="ai-generate-btn" id="aiGenBtn" onclick="generateAIPacking()">Generate</button>
+        </div>
+        <div style="font-size:0.7rem;color:var(--muted);margin-top:5px;">Stored locally — only sent to Anthropic's API.</div>
+      </div>
+      <div class="ai-status" id="aiStatus"></div>
+      <div class="ai-results" id="aiResults"></div>
+      <div class="ai-footer">
+        <button class="ai-cancel-btn" onclick="closeAIModal()">Cancel</button>
+        <button class="ai-apply-btn" id="aiApplyBtn" onclick="applyAISuggestions()" disabled>Add to Packing List</button>
+      </div>
     </div>
   </div>
 
@@ -1469,6 +1521,159 @@ function renderPacking() {
   container.innerHTML = '';
   packCats.forEach(cat => container.appendChild(buildPackCatEl(cat)));
   updatePackProgress();
+}
+
+// ═══════════════════════════════════════════════════════
+//  AI PACKING SUGGESTIONS
+// ═══════════════════════════════════════════════════════
+let aiSuggestedCategories = [];
+
+function openAIModal() {
+  const tripName = document.getElementById('tripName').value || 'Your Trip';
+  const tripDates = document.getElementById('tripDates').value || '';
+  const tripLocation = (legs[0] && legs[0].to) || 'Orlando, FL';
+  const travelers = people
+    .filter(p => p.status !== 'declined')
+    .map(p => (p.name || 'Traveler') + (p.role ? ` (${p.role})` : ''));
+  document.getElementById('aiContextPill').innerHTML =
+    `<strong>${tripName}</strong> · ${tripLocation}<br>` +
+    (tripDates ? `${tripDates}<br>` : '') +
+    (travelers.length ? `Travelers: ${travelers.join(', ')}` : 'No travelers added yet');
+  const saved = localStorage.getItem('aiApiKey');
+  if (saved) document.getElementById('aiKeyInput').value = saved;
+  document.getElementById('aiStatus').textContent = '';
+  document.getElementById('aiResults').innerHTML = '';
+  document.getElementById('aiApplyBtn').disabled = true;
+  aiSuggestedCategories = [];
+  document.getElementById('aiOverlay').style.display = 'flex';
+}
+
+function closeAIModal() {
+  document.getElementById('aiOverlay').style.display = 'none';
+}
+
+async function generateAIPacking() {
+  const key = document.getElementById('aiKeyInput').value.trim();
+  if (!key) { document.getElementById('aiStatus').textContent = '⚠ Please enter your Anthropic API key.'; return; }
+  localStorage.setItem('aiApiKey', key);
+
+  const tripName = document.getElementById('tripName').value || 'Florida Trip';
+  const tripDates = document.getElementById('tripDates').value || 'May 23 – June 5, 2026';
+  const tripLocation = (legs[0] && legs[0].to) || 'Orlando, FL';
+  const travelers = people
+    .filter(p => p.status !== 'declined')
+    .map(p => (p.name || 'Traveler') + (p.role ? ` (${p.role})` : ''));
+  const existingCats = packCats.map(c => c.name).filter(Boolean);
+
+  const btn = document.getElementById('aiGenBtn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  document.getElementById('aiStatus').textContent = '⏳ Calling AI — this may take a few seconds…';
+  document.getElementById('aiResults').innerHTML = '';
+  document.getElementById('aiApplyBtn').disabled = true;
+
+  const prompt =
+    `Generate a comprehensive packing list for this trip:\n` +
+    `Trip: ${tripName}\nDestination: ${tripLocation}\nDates: ${tripDates}\n` +
+    `Travelers: ${travelers.length ? travelers.join(', ') : 'not specified'}\n` +
+    (existingCats.length ? `Already have categories: ${existingCats.join(', ')}\n` : '') +
+    `\nReturn ONLY a JSON array (no markdown, no explanation) like:\n` +
+    `[{"emoji":"📄","category":"Documents","items":["Passport","Travel insurance"]},` +
+    `{"emoji":"👕","category":"Clothing","items":["T-shirts x7","Shorts x4"]}]\n` +
+    `Make it specific to the destination, season, and each traveler. 6-9 categories, 6-12 items each.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('Could not parse AI response.');
+    aiSuggestedCategories = JSON.parse(jsonMatch[0]);
+    renderAIResults(aiSuggestedCategories);
+    document.getElementById('aiStatus').textContent =
+      `✅ ${aiSuggestedCategories.length} categories ready — uncheck anything you don't need.`;
+    document.getElementById('aiApplyBtn').disabled = false;
+  } catch(e) {
+    document.getElementById('aiStatus').textContent = `❌ ${e.message}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generate';
+  }
+}
+
+function renderAIResults(cats) {
+  const container = document.getElementById('aiResults');
+  container.innerHTML = '';
+  cats.forEach((cat, ci) => {
+    const div = document.createElement('div');
+    div.className = 'ai-res-cat';
+    div.innerHTML = `
+      <div class="ai-res-cat-header">
+        <span>${cat.emoji || '📦'} ${cat.category}</span>
+        <button class="ai-res-cat-toggle" onclick="toggleAllAICat(${ci})">Deselect all</button>
+      </div>
+      <div class="ai-res-items">
+        ${cat.items.map((item, ii) => `
+          <label class="ai-res-item">
+            <input type="checkbox" data-ci="${ci}" data-ii="${ii}" checked>
+            <span>${escHtml(item)}</span>
+          </label>`).join('')}
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function toggleAllAICat(ci) {
+  const cbs = document.querySelectorAll(`#aiResults input[data-ci="${ci}"]`);
+  const btn = document.querySelectorAll('#aiResults .ai-res-cat-toggle')[ci];
+  const allChecked = [...cbs].every(c => c.checked);
+  cbs.forEach(cb => cb.checked = !allChecked);
+  if (btn) btn.textContent = allChecked ? 'Select all' : 'Deselect all';
+}
+
+function applyAISuggestions() {
+  const checkboxes = document.querySelectorAll('#aiResults input[type=checkbox]');
+  const selected = {};
+  checkboxes.forEach(cb => {
+    if (!cb.checked) return;
+    const ci = parseInt(cb.dataset.ci), ii = parseInt(cb.dataset.ii);
+    if (!selected[ci]) selected[ci] = [];
+    selected[ci].push(aiSuggestedCategories[ci].items[ii]);
+  });
+
+  Object.entries(selected).forEach(([ci, items]) => {
+    const aiCat = aiSuggestedCategories[parseInt(ci)];
+    let cat = packCats.find(c => c.name.toLowerCase().trim() === aiCat.category.toLowerCase().trim());
+    if (!cat) {
+      cat = { id: packCatCounter++, emoji: aiCat.emoji || '📦', name: aiCat.category, items: [] };
+      packCats.push(cat);
+    }
+    items.forEach(itemText => {
+      if (!cat.items.some(i => i.text.toLowerCase() === itemText.toLowerCase())) {
+        cat.items.push({ id: packItemCounter++, text: itemText, checked: false });
+      }
+    });
+  });
+
+  renderPacking();
+  saveToStorage();
+  closeAIModal();
+  switchNavTab(2);
 }
 
 // ═══════════════════════════════════════════════════════
